@@ -10,6 +10,11 @@ before_script:
 - apt update && apt -y install make
 stages:
 - test
+
+unit_tests:
+  stage: test
+  script:
+    - echo ""
 sast:
   stage: test
 include:
