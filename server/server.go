@@ -1,4 +1,4 @@
-package src
+package server
 
 import (
 	"crypto/rand"
@@ -11,8 +11,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"ssh-sentinel-server/src/helper"
-	"ssh-sentinel-server/src/model"
+	"ssh-sentinel-server/helper"
+	model2 "ssh-sentinel-server/model"
 	"time"
 )
 
@@ -45,7 +45,7 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
 	signedCert := ssh.MarshalAuthorizedKey(cert)
 
-	var response = model.NewKeySignResponse(true, "")
+	var response = model2.NewKeySignResponse(true, "")
 	response.SignedKey = string(signedCert)
 
 	writer.WriteHeader(http.StatusOK)
@@ -53,10 +53,10 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
 }
 
-func MarshallSigningRequest(request *http.Request) (model.KeySignRequest, error) {
+func MarshallSigningRequest(request *http.Request) (model2.KeySignRequest, error) {
 
 	body, err := ioutil.ReadAll(request.Body)
-	signRequest := model.KeySignRequest{}
+	signRequest := model2.KeySignRequest{}
 
 	if err == nil {
 		json.Unmarshal(body, &signRequest)
@@ -120,7 +120,7 @@ func ErrorHandler(next http.Handler) http.Handler {
 			if err := recover(); err != nil {
 				// There is surely a better way to do this
 				errorMsg := fmt.Sprintf("%s", err)
-				response := model.NewKeySignResponse(false, errorMsg)
+				response := model2.NewKeySignResponse(false, errorMsg)
 				json.NewEncoder(w).Encode(response)
 			}
 		}()
@@ -134,7 +134,7 @@ func Version(response http.ResponseWriter, r *http.Request) {
 	io.WriteString(response, "Version 1")
 }
 
-func Serve() {
+func Serve(port int) {
 
 	commonHandlers := alice.New(LoggingHandler, ErrorHandler)
 	mux := http.NewServeMux()
@@ -143,7 +143,9 @@ func Serve() {
 	mux.HandleFunc("/version", Version)
 	mux.Handle("/ssh", commonHandlers.ThenFunc(KeySignHandler))
 
-	err := http.ListenAndServe(":8080", mux)
+	bindAddr := fmt.Sprintf(":%d", port)
+
+	err := http.ListenAndServe(bindAddr, mux)
 	if err != nil {
 		log.Fatal(err)
 	}
