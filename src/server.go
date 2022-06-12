@@ -3,6 +3,7 @@ package src
 import (
 	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"github.com/justinas/alice"
 	"golang.org/x/crypto/ssh"
 	"io"
@@ -10,15 +11,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"ssh-sentinel-server/src/helper"
 	"ssh-sentinel-server/src/model"
 	"time"
 )
-
-type KeySignRequest struct {
-	APIKey     string   `json:"api_key"`
-	Principals []string `json:"principals"`
-	Key        string   `json:"key"`
-}
 
 const contentTypeKey = "Content-Type"
 const jsonContentType = "application/json"
@@ -31,20 +27,20 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 	signRequest, err := MarshallSigningRequest(request)
 
 	if err != nil {
-		HandleError(err, "Failed to marshall signing request", responseEncoder)
+		panic(helper.NewError("Failed to marshall signing request: [%s]", err))
 	}
 
 	// ssh.ParseAuthorizedKey expects the key to be in the "disk" format
 	pubKeyDisk, _, _, _, err := ssh.ParseAuthorizedKey([]byte(signRequest.Key))
 
 	if err != nil {
-		HandleError(err, "Failed to parse key from request", responseEncoder)
+		panic(helper.NewError("Failed to parse key: [%s]", err))
 	}
 
 	cert, err := MakeSSHCertificate(pubKeyDisk, nil, 0, 0)
 
 	if err != nil {
-		HandleError(err, "Failed to sign key", responseEncoder)
+		panic(helper.NewError("Failed to sign cert: [%s]", err))
 	}
 
 	signedCert := ssh.MarshalAuthorizedKey(cert)
@@ -57,17 +53,10 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
 }
 
-func HandleError(err error, msg string, responseEncoder *json.Encoder) {
-
-	response := model.NewKeySignResponse(false, msg+" "+err.Error())
-
-	responseEncoder.Encode(response)
-}
-
-func MarshallSigningRequest(request *http.Request) (KeySignRequest, error) {
+func MarshallSigningRequest(request *http.Request) (model.KeySignRequest, error) {
 
 	body, err := ioutil.ReadAll(request.Body)
-	signRequest := KeySignRequest{}
+	signRequest := model.KeySignRequest{}
 
 	if err == nil {
 		json.Unmarshal(body, &signRequest)
@@ -98,17 +87,17 @@ func GetCAKey() (caPriv ssh.Signer) {
 
 	work, _ := os.Getwd()
 	log.Printf("Working dir [%s]", work)
-
-	privKeyFile, err := ioutil.ReadFile("resources/CA")
+	keyFile := "resources/CA"
+	privKeyFile, err := ioutil.ReadFile(keyFile)
 
 	if err != nil {
-		log.Fatal("Cannot load priv key", err)
+		panic(helper.NewError("Failed to read private key [%s] : [%s]", keyFile, err))
 	}
 
 	privKey, err := ssh.ParsePrivateKey(privKeyFile)
 
 	if err != nil {
-		log.Fatal("Cannot parse privKey", err)
+		panic(err)
 	}
 
 	return privKey
@@ -129,7 +118,9 @@ func ErrorHandler(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				response := model.NewKeySignResponse(false, err)
+				// There is surely a better way to do this
+				errorMsg := fmt.Sprintf("%s", err)
+				response := model.NewKeySignResponse(false, errorMsg)
 				json.NewEncoder(w).Encode(response)
 			}
 		}()

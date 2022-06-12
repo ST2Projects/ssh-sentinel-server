@@ -168,3 +168,5 @@ fabric.properties
 !.idea/runConfigurations
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,go,goland
+
+resources/CA
