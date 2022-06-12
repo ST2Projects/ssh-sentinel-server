@@ -22,8 +22,9 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		port, _ := strconv.Atoi(cmd.Flags().Lookup("port").Value.String())
+		config := cmd.Flags().Lookup("config").Value.String()
 
-		server.Serve(port)
+		server.Serve(port, config)
 	},
 }
 
@@ -40,4 +41,6 @@ func init() {
 	// is called directly, e.g.:
 	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	serveCmd.Flags().IntP("port", "p", 8080, "Port to run the service on")
+	serveCmd.Flags().StringP("config", "c", "", "Config file")
+	serveCmd.MarkFlagRequired("config")
 }

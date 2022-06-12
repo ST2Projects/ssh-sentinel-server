@@ -11,13 +11,16 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"ssh-sentinel-server/config"
 	"ssh-sentinel-server/helper"
-	model2 "ssh-sentinel-server/model"
+	"ssh-sentinel-server/model"
 	"time"
 )
 
 const contentTypeKey = "Content-Type"
 const jsonContentType = "application/json"
+
+var appConfig config.Config
 
 func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
@@ -37,7 +40,7 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 		panic(helper.NewError("Failed to parse key: [%s]", err))
 	}
 
-	cert, err := MakeSSHCertificate(pubKeyDisk, nil, 0, 0)
+	cert, err := MakeSSHCertificate(pubKeyDisk, nil)
 
 	if err != nil {
 		panic(helper.NewError("Failed to sign cert: [%s]", err))
@@ -45,7 +48,7 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
 	signedCert := ssh.MarshalAuthorizedKey(cert)
 
-	var response = model2.NewKeySignResponse(true, "")
+	var response = model.NewKeySignResponse(true, "")
 	response.SignedKey = string(signedCert)
 
 	writer.WriteHeader(http.StatusOK)
@@ -53,10 +56,10 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
 }
 
-func MarshallSigningRequest(request *http.Request) (model2.KeySignRequest, error) {
+func MarshallSigningRequest(request *http.Request) (model.KeySignRequest, error) {
 
 	body, err := ioutil.ReadAll(request.Body)
-	signRequest := model2.KeySignRequest{}
+	signRequest := model.KeySignRequest{}
 
 	if err == nil {
 		json.Unmarshal(body, &signRequest)
@@ -65,8 +68,10 @@ func MarshallSigningRequest(request *http.Request) (model2.KeySignRequest, error
 	return signRequest, err
 }
 
-func MakeSSHCertificate(pubKey ssh.PublicKey, principals []string, validBefore uint64, validAfter uint64) (*ssh.Certificate, error) {
+func MakeSSHCertificate(pubKey ssh.PublicKey, principals []string) (*ssh.Certificate, error) {
 	caPriv := GetCAKey()
+
+	validBefore, validAfter := ComputeValidity()
 
 	cert := &ssh.Certificate{
 		Key:             pubKey,
@@ -81,6 +86,15 @@ func MakeSSHCertificate(pubKey ssh.PublicKey, principals []string, validBefore u
 	err := cert.SignCert(rand.Reader, caPriv)
 
 	return cert, err
+}
+
+func ComputeValidity() (uint64, uint64) {
+	now := time.Now()
+	validBefore := uint64(now.Unix())
+	maxDuration, _ := time.ParseDuration(appConfig.MaxValidTime)
+	validAfter := uint64(now.Add(maxDuration).Unix())
+
+	return validAfter, validBefore
 }
 
 func GetCAKey() (caPriv ssh.Signer) {
@@ -120,7 +134,7 @@ func ErrorHandler(next http.Handler) http.Handler {
 			if err := recover(); err != nil {
 				// There is surely a better way to do this
 				errorMsg := fmt.Sprintf("%s", err)
-				response := model2.NewKeySignResponse(false, errorMsg)
+				response := model.NewKeySignResponse(false, errorMsg)
 				json.NewEncoder(w).Encode(response)
 			}
 		}()
@@ -134,7 +148,9 @@ func Version(response http.ResponseWriter, r *http.Request) {
 	io.WriteString(response, "Version 1")
 }
 
-func Serve(port int) {
+func Serve(port int, configPath string) {
+
+	appConfig = config.NewConfig(configPath)
 
 	commonHandlers := alice.New(LoggingHandler, ErrorHandler)
 	mux := http.NewServeMux()
