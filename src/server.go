@@ -3,24 +3,16 @@ package src
 import (
 	"crypto/rand"
 	"encoding/json"
+	"github.com/justinas/alice"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"ssh-sentinel-server/src/model"
+	"time"
 )
-
-type sshHandler struct {
-}
-
-type KeySignResponse struct {
-	Success   bool   `json:"success"`
-	Message   string `json:"message"`
-	SignedKey string `json:"signedKey"`
-	NotBefore uint64 `json:"notBefore"`
-	NotAfter  uint64 `json:"notAfter"`
-}
 
 type KeySignRequest struct {
 	APIKey     string   `json:"api_key"`
@@ -31,51 +23,57 @@ type KeySignRequest struct {
 const contentTypeKey = "Content-Type"
 const jsonContentType = "application/json"
 
-func (h *sshHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
-	body, err := ioutil.ReadAll(request.Body)
+	writer.Header().Set(contentTypeKey, jsonContentType)
+	responseEncoder := json.NewEncoder(writer)
+
+	signRequest, err := MarshallSigningRequest(request)
 
 	if err != nil {
-		response := &KeySignResponse{
-			Success: false,
-			Message: err.Error(),
-		}
-
-		json.NewEncoder(writer).Encode(response)
+		HandleError(err, "Failed to marshall signing request", responseEncoder)
 	}
 
-	signRequest := KeySignRequest{}
-	json.Unmarshal(body, &signRequest)
-
+	// ssh.ParseAuthorizedKey expects the key to be in the "disk" format
 	pubKeyDisk, _, _, _, err := ssh.ParseAuthorizedKey([]byte(signRequest.Key))
 
 	if err != nil {
-		writer.WriteHeader(400)
-		log.Fatal(err)
+		HandleError(err, "Failed to parse key from request", responseEncoder)
 	}
 
 	cert, err := MakeSSHCertificate(pubKeyDisk, nil, 0, 0)
 
 	if err != nil {
-		writer.WriteHeader(400)
-		io.WriteString(writer, "Failed to sign key: "+err.Error())
-		panic(err)
+		HandleError(err, "Failed to sign key", responseEncoder)
 	}
 
 	signedCert := ssh.MarshalAuthorizedKey(cert)
 
-	response := &KeySignResponse{
-		Success:   true,
-		Message:   "",
-		SignedKey: string(signedCert),
-		NotBefore: 0,
-		NotAfter:  0,
+	var response = model.NewKeySignResponse(true, "")
+	response.SignedKey = string(signedCert)
+
+	writer.WriteHeader(http.StatusOK)
+	responseEncoder.Encode(response)
+
+}
+
+func HandleError(err error, msg string, responseEncoder *json.Encoder) {
+
+	response := model.NewKeySignResponse(false, msg+" "+err.Error())
+
+	responseEncoder.Encode(response)
+}
+
+func MarshallSigningRequest(request *http.Request) (KeySignRequest, error) {
+
+	body, err := ioutil.ReadAll(request.Body)
+	signRequest := KeySignRequest{}
+
+	if err == nil {
+		json.Unmarshal(body, &signRequest)
 	}
 
-	writer.Header().Set(contentTypeKey, jsonContentType)
-	writer.WriteHeader(http.StatusOK)
-	json.NewEncoder(writer).Encode(response)
-
+	return signRequest, err
 }
 
 func MakeSSHCertificate(pubKey ssh.PublicKey, principals []string, validBefore uint64, validAfter uint64) (*ssh.Certificate, error) {
@@ -116,16 +114,43 @@ func GetCAKey() (caPriv ssh.Signer) {
 	return privKey
 }
 
+func LoggingHandler(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		t1 := time.Now()
+		next.ServeHTTP(w, r)
+		t2 := time.Now()
+		log.Printf("[%s] %q %v\n", r.Method, r.URL.String(), t2.Sub(t1))
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func ErrorHandler(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				response := model.NewKeySignResponse(false, err)
+				json.NewEncoder(w).Encode(response)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	}
+
+	return http.HandlerFunc(fn)
+}
+
 func Version(response http.ResponseWriter, r *http.Request) {
 	io.WriteString(response, "Version 1")
 }
 
 func Serve() {
+
+	commonHandlers := alice.New(LoggingHandler, ErrorHandler)
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", Version)
 	mux.HandleFunc("/version", Version)
-	mux.Handle("/ssh", &sshHandler{})
+	mux.Handle("/ssh", commonHandlers.ThenFunc(KeySignHandler))
 
 	err := http.ListenAndServe(":8080", mux)
 	if err != nil {
