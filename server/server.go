@@ -1,4 +1,4 @@
-package src
+package server
 
 import (
 	"crypto/rand"
@@ -11,13 +11,16 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"ssh-sentinel-server/src/helper"
-	"ssh-sentinel-server/src/model"
+	"ssh-sentinel-server/config"
+	"ssh-sentinel-server/helper"
+	"ssh-sentinel-server/model"
 	"time"
 )
 
 const contentTypeKey = "Content-Type"
 const jsonContentType = "application/json"
+
+var appConfig config.Config
 
 func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
@@ -37,7 +40,7 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 		panic(helper.NewError("Failed to parse key: [%s]", err))
 	}
 
-	cert, err := MakeSSHCertificate(pubKeyDisk, nil, 0, 0)
+	cert, err := MakeSSHCertificate(pubKeyDisk, nil)
 
 	if err != nil {
 		panic(helper.NewError("Failed to sign cert: [%s]", err))
@@ -65,8 +68,10 @@ func MarshallSigningRequest(request *http.Request) (model.KeySignRequest, error)
 	return signRequest, err
 }
 
-func MakeSSHCertificate(pubKey ssh.PublicKey, principals []string, validBefore uint64, validAfter uint64) (*ssh.Certificate, error) {
+func MakeSSHCertificate(pubKey ssh.PublicKey, principals []string) (*ssh.Certificate, error) {
 	caPriv := GetCAKey()
+
+	validBefore, validAfter := ComputeValidity()
 
 	cert := &ssh.Certificate{
 		Key:             pubKey,
@@ -81,6 +86,15 @@ func MakeSSHCertificate(pubKey ssh.PublicKey, principals []string, validBefore u
 	err := cert.SignCert(rand.Reader, caPriv)
 
 	return cert, err
+}
+
+func ComputeValidity() (uint64, uint64) {
+	now := time.Now()
+	validBefore := uint64(now.Unix())
+	maxDuration, _ := time.ParseDuration(appConfig.MaxValidTime)
+	validAfter := uint64(now.Add(maxDuration).Unix())
+
+	return validAfter, validBefore
 }
 
 func GetCAKey() (caPriv ssh.Signer) {
@@ -134,7 +148,9 @@ func Version(response http.ResponseWriter, r *http.Request) {
 	io.WriteString(response, "Version 1")
 }
 
-func Serve() {
+func Serve(port int, configPath string) {
+
+	appConfig = config.NewConfig(configPath)
 
 	commonHandlers := alice.New(LoggingHandler, ErrorHandler)
 	mux := http.NewServeMux()
@@ -143,7 +159,9 @@ func Serve() {
 	mux.HandleFunc("/version", Version)
 	mux.Handle("/ssh", commonHandlers.ThenFunc(KeySignHandler))
 
-	err := http.ListenAndServe(":8080", mux)
+	bindAddr := fmt.Sprintf(":%d", port)
+
+	err := http.ListenAndServe(bindAddr, mux)
 	if err != nil {
 		log.Fatal(err)
 	}

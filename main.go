@@ -1,7 +1,7 @@
 package main
 
-import "ssh-sentinel-server/src"
+import "ssh-sentinel-server/cmd"
 
 func main() {
-	src.Serve()
+	cmd.Execute()
 }

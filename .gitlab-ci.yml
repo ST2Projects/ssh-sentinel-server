@@ -14,7 +14,8 @@ stages:
 unit_tests:
   stage: test
   script:
-    - echo ""
+    - make test_coverage
+  coverage: "/^coverage:\\s(\\d+(?:\\.\\d+)?%)/"
 sast:
   stage: test
 include:
