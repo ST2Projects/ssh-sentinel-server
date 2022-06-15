@@ -15,6 +15,7 @@ unit_tests:
   stage: test
   script:
     - make test_coverage
+  coverage: "/^coverage:\\s(\\d+(?:\\.\\d+)?%)/"
 sast:
   stage: test
 include:
