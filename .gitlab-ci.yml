@@ -14,7 +14,7 @@ stages:
 unit_tests:
   stage: test
   script:
-    - echo ""
+    - make test_coverage
 sast:
   stage: test
 include:
