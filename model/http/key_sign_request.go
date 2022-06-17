@@ -1,4 +1,4 @@
-package model
+package http
 
 type KeySignRequest struct {
 	APIKey     string   `json:"api_key"`

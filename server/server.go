@@ -5,22 +5,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/justinas/alice"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"ssh-sentinel-server/config"
 	"ssh-sentinel-server/helper"
-	"ssh-sentinel-server/model"
+	http2 "ssh-sentinel-server/model/http"
 	"time"
 )
 
 const contentTypeKey = "Content-Type"
 const jsonContentType = "application/json"
-
-var appConfig config.Config
 
 func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
@@ -48,7 +46,7 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
 	signedCert := ssh.MarshalAuthorizedKey(cert)
 
-	var response = model.NewKeySignResponse(true, "")
+	var response = http2.NewKeySignResponse(true, "")
 	response.SignedKey = string(signedCert)
 
 	writer.WriteHeader(http.StatusOK)
@@ -56,10 +54,10 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
 }
 
-func MarshallSigningRequest(request *http.Request) (model.KeySignRequest, error) {
+func MarshallSigningRequest(request *http.Request) (http2.KeySignRequest, error) {
 
 	body, err := ioutil.ReadAll(request.Body)
-	signRequest := model.KeySignRequest{}
+	signRequest := http2.KeySignRequest{}
 
 	if err == nil {
 		json.Unmarshal(body, &signRequest)
@@ -91,7 +89,7 @@ func MakeSSHCertificate(pubKey ssh.PublicKey, principals []string) (*ssh.Certifi
 func ComputeValidity() (uint64, uint64) {
 	now := time.Now()
 	validBefore := uint64(now.Unix())
-	maxDuration, _ := time.ParseDuration(appConfig.MaxValidTime)
+	maxDuration, _ := time.ParseDuration(config.Config.MaxValidTime)
 	validAfter := uint64(now.Add(maxDuration).Unix())
 
 	return validAfter, validBefore
@@ -134,7 +132,7 @@ func ErrorHandler(next http.Handler) http.Handler {
 			if err := recover(); err != nil {
 				// There is surely a better way to do this
 				errorMsg := fmt.Sprintf("%s", err)
-				response := model.NewKeySignResponse(false, errorMsg)
+				response := http2.NewKeySignResponse(false, errorMsg)
 				json.NewEncoder(w).Encode(response)
 			}
 		}()
@@ -148,9 +146,7 @@ func Version(response http.ResponseWriter, r *http.Request) {
 	io.WriteString(response, "Version 1")
 }
 
-func Serve(port int, configPath string) {
-
-	appConfig = config.NewConfig(configPath)
+func Serve(port int) {
 
 	commonHandlers := alice.New(LoggingHandler, ErrorHandler)
 	mux := http.NewServeMux()

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"ssh-sentinel-server/server"
+	"ssh-sentinel-server/app"
 	"strconv"
 )
 
@@ -12,9 +12,9 @@ var serveCmd = &cobra.Command{
 	Short: "Start the CA server",
 	Run: func(cmd *cobra.Command, args []string) {
 		port, _ := strconv.Atoi(cmd.Flags().Lookup("port").Value.String())
-		config := cmd.Flags().Lookup("config").Value.String()
+		configPath := cmd.Flags().Lookup("config").Value.String()
 
-		server.Serve(port, config)
+		app.InitialiseApp(port, configPath)
 	},
 }
 

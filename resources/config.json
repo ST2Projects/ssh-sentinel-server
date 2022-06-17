@@ -1,5 +1,13 @@
 {
   "CAPrivateKey": "CA",
   "CAPublicKey": "CA.pub",
-  "MaxValidTime": "30m"
+  "MaxValidTime": "30m",
+  "db": {
+  "dialect": "sqlite3",
+    "username": "sentinel",
+    "password": "sentinel",
+    "connection": "sentinel.db",
+    "dbName": "sentinel",
+    "devMode": true
+  }
 }
