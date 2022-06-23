@@ -11,6 +11,7 @@ import (
 )
 
 type Configtype struct {
+	DevMode      bool   `json:"devMode"`
 	CAPrivateKey string `json:"CAPrivateKey"`
 	CAPublicKey  string `json:"CAPublicKey"`
 	MaxValidTime string `json:"MaxValidTime"`
@@ -24,7 +25,7 @@ func (d *DbType) AsGormConnection() gorm.Dialector {
 
 	switch d.Dialect {
 	case "sqlite3":
-		if d.DevMode {
+		if Config.DevMode {
 			log.Warnf("Dev mode enabled. Deleting DB [%s]", d.Connection)
 			err := os.Remove(d.Connection)
 			if err != nil {
@@ -45,14 +46,13 @@ type DbType struct {
 	Password   string      `json:"password"`
 	Connection string      `json:"connection"`
 	DBName     string      `json:"dbName"`
-	DevMode    bool        `json:"devMode"`
 }
 
 type DbDriver string
 
 var Config *Configtype
 
-func MakeConfig(configFile string) {
+func MakeConfig(configFile string, devMode bool) {
 	if _, err := os.Stat(configFile); errors.Is(err, os.ErrNotExist) {
 		panic("config file " + configFile + " does not exist")
 	}
@@ -65,6 +65,7 @@ func MakeConfig(configFile string) {
 	appConfig := Configtype{}
 
 	json.Unmarshal(configString, &appConfig)
+	appConfig.DevMode = devMode
 
 	Config = &appConfig
 }

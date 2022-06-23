@@ -7,7 +7,6 @@
     "username": "sentinel",
     "password": "sentinel",
     "connection": "sentinel.db",
-    "dbName": "sentinel",
-    "devMode": true
+    "dbName": "sentinel"
   }
 }

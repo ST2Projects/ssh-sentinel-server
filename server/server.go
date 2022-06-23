@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	"ssh-sentinel-server/config"
 	"ssh-sentinel-server/helper"
 	http2 "ssh-sentinel-server/model/http"
+	"ssh-sentinel-server/sql"
 	"time"
 )
 
@@ -25,7 +27,7 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set(contentTypeKey, jsonContentType)
 	responseEncoder := json.NewEncoder(writer)
 
-	signRequest, err := MarshallSigningRequest(request)
+	signRequest, err := MarshallSigningRequest(request.Body)
 
 	if err != nil {
 		panic(helper.NewError("Failed to marshall signing request: [%s]", err))
@@ -54,9 +56,9 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
 }
 
-func MarshallSigningRequest(request *http.Request) (http2.KeySignRequest, error) {
+func MarshallSigningRequest(requestReader io.Reader) (http2.KeySignRequest, error) {
 
-	body, err := ioutil.ReadAll(request.Body)
+	body, err := ioutil.ReadAll(requestReader)
 	signRequest := http2.KeySignRequest{}
 
 	if err == nil {
@@ -115,6 +117,38 @@ func GetCAKey() (caPriv ssh.Signer) {
 	return privKey
 }
 
+func AuthenticationHandler(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set(contentTypeKey, jsonContentType)
+
+		body, err := ioutil.ReadAll(r.Body)
+
+		if err != nil {
+			panic(helper.NewError("Failed to marshall request ", err))
+		}
+
+		signRequest, err := MarshallSigningRequest(bytes.NewReader(body))
+
+		r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+
+		if err != nil {
+			panic(helper.NewError("Failed to marshall request ", err))
+		}
+
+		user := sql.GetUserByUsername(signRequest.Username)
+
+		isValid := user.APIKey.Validate(signRequest.APIKey)
+
+		if !isValid {
+			panic(helper.NewError("Unauthorised key"))
+		}
+
+		next.ServeHTTP(w, r)
+	}
+
+	return http.HandlerFunc(fn)
+}
+
 func LoggingHandler(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		t1 := time.Now()
@@ -148,7 +182,7 @@ func Version(response http.ResponseWriter, r *http.Request) {
 
 func Serve(port int) {
 
-	commonHandlers := alice.New(LoggingHandler, ErrorHandler)
+	commonHandlers := alice.New(LoggingHandler, ErrorHandler, AuthenticationHandler)
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", Version)

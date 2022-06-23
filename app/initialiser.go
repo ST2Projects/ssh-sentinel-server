@@ -7,10 +7,10 @@ import (
 	"ssh-sentinel-server/sql"
 )
 
-func InitialiseApp(port int, configPath string) {
+func InitialiseApp(port int, configPath string, devMode bool) {
 
 	log.Info("Starting Sentinel service")
-	config.MakeConfig(configPath)
+	config.MakeConfig(configPath, devMode)
 	sql.Connect()
 
 	server.Serve(port)
