@@ -97,10 +97,9 @@ func NewUser(name string, username string, principals []string) (User, string) {
 		Principals: principalTypes,
 		APIKey:     apiKey,
 	}, rawKey
-
 }
 
-func (u *User) TableName() string {
+func (u *User) Table() string {
 	return "user"
 }
 

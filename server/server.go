@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -15,7 +14,6 @@ import (
 	"ssh-sentinel-server/config"
 	"ssh-sentinel-server/helper"
 	http2 "ssh-sentinel-server/model/http"
-	"ssh-sentinel-server/sql"
 	"time"
 )
 
@@ -115,65 +113,6 @@ func GetCAKey() (caPriv ssh.Signer) {
 	}
 
 	return privKey
-}
-
-func AuthenticationHandler(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set(contentTypeKey, jsonContentType)
-
-		body, err := ioutil.ReadAll(r.Body)
-
-		if err != nil {
-			panic(helper.NewError("Failed to marshall request ", err))
-		}
-
-		signRequest, err := MarshallSigningRequest(bytes.NewReader(body))
-
-		r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-
-		if err != nil {
-			panic(helper.NewError("Failed to marshall request ", err))
-		}
-
-		user := sql.GetUserByUsername(signRequest.Username)
-
-		isValid := user.APIKey.Validate(signRequest.APIKey)
-
-		if !isValid {
-			panic(helper.NewError("Unauthorised key"))
-		}
-
-		next.ServeHTTP(w, r)
-	}
-
-	return http.HandlerFunc(fn)
-}
-
-func LoggingHandler(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		t1 := time.Now()
-		next.ServeHTTP(w, r)
-		t2 := time.Now()
-		log.Printf("[%s] %q %v\n", r.Method, r.URL.String(), t2.Sub(t1))
-	}
-
-	return http.HandlerFunc(fn)
-}
-
-func ErrorHandler(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		defer func() {
-			if err := recover(); err != nil {
-				// There is surely a better way to do this
-				errorMsg := fmt.Sprintf("%s", err)
-				response := http2.NewKeySignResponse(false, errorMsg)
-				json.NewEncoder(w).Encode(response)
-			}
-		}()
-		next.ServeHTTP(w, r)
-	}
-
-	return http.HandlerFunc(fn)
 }
 
 func Version(response http.ResponseWriter, r *http.Request) {

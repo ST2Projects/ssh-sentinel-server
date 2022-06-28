@@ -7,9 +7,9 @@
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 image: golang:latest
 before_script:
-- apt update && apt -y install make
+  - apt update && apt -y install make
 stages:
-- test
+  - test
 
 unit_tests:
   stage: test
@@ -19,5 +19,5 @@ unit_tests:
 sast:
   stage: test
 include:
-- template: Security/SAST.gitlab-ci.yml
-- template: Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
