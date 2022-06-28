@@ -1,4 +1,4 @@
-package model
+package http
 
 type KeySignResponse struct {
 	Success   bool   `json:"success"`
