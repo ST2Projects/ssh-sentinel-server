@@ -100,7 +100,7 @@ func ComputeValidity() (uint64, uint64) {
 
 func GetCAKey() (caPriv ssh.Signer) {
 
-	keyFile := "resources/CA"
+	keyFile := config.Config.CAPrivateKey
 	privKeyFile, err := ioutil.ReadFile(keyFile)
 
 	if err != nil {
