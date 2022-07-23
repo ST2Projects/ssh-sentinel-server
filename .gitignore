@@ -171,4 +171,5 @@ fabric.properties
 
 resources/CA
 resources/local
+resources/*.log
 *.db
