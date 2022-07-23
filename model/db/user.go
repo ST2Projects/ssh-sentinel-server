@@ -15,7 +15,7 @@ type User struct {
 	UserName   string      `db:"username" json:"user_name" gorm:"unique"`
 	Name       string      `db:"name" json:"name"`
 	Expired    bool        `db:"expired" json:"expired"`
-	APIKey     APIKeyType  `db:"keyId" json:"keyId"`
+	APIKey     APIKey      `db:"keyId" json:"keyId"`
 	Principals []Principal `db:"principals" json:"principals"`
 }
 
@@ -25,37 +25,37 @@ type Principal struct {
 	Principal string `db:"principal" json:"principal"`
 }
 
-type APIKeyType struct {
+type APIKey struct {
 	gorm.Model
 	UserId uint   `db:"id" json:"id"`
 	Key    string `json:"api_key" db:"apiKey"`
 }
 
-func NewAPIKey() (APIKeyType, string) {
+func NewAPIKey() (APIKey, string) {
 	id := uuid.New().String()
 
 	sha := sha256.New()
 	sha.Write([]byte(id))
 	finalValue := sha.Sum(nil)
 
-	apiKey := APIKeyType{}
+	apiKey := APIKey{}
 
 	apiKey.Key = hex.EncodeToString(finalValue)
 
 	return apiKey, id
 }
 
-func AsAPIKey(key uuid.UUID) APIKeyType {
+func AsAPIKey(key uuid.UUID) APIKey {
 	sha := sha256.New()
 	sha.Write([]byte(key.String()))
 	finalValue := sha.Sum(nil)
 
-	apiKey := APIKeyType{}
+	apiKey := APIKey{}
 	apiKey.Key = hex.EncodeToString(finalValue)
 	return apiKey
 }
 
-func (k *APIKeyType) Validate(other string) bool {
+func (k *APIKey) Validate(other string) bool {
 	sha := sha256.New()
 	sha.Write([]byte(other))
 	otherSum := sha.Sum(nil)
@@ -65,8 +65,6 @@ func (k *APIKeyType) Validate(other string) bool {
 	if err != nil {
 		log.Fatal("Failed to decode key", err)
 	}
-
-	log.Infof("This: [%s], Other: [%s] :: [%s] ", k.Key, hex.EncodeToString(otherSum), other)
 
 	// ConstantTimeCompare returns 1 when equal...
 	return subtle.ConstantTimeCompare(thisDecoded, otherSum) == 1

@@ -1,0 +1,9 @@
+
+### testNormalRequest
+POST http://localhost/ssh
+Content-Type: application/json
+
+{"username": "test", "api_key": "47e69901-7feb-40fd-a48f-8d42211a16f0", "principals": ["test"], "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICazCPU7VgxhgZWNXr2bA2nErkFyXRz4IMddcZLDN7MU xxx@aaa"}
+
+
+###

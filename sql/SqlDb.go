@@ -23,14 +23,14 @@ func Connect() {
 
 func initTables() {
 
-	err := dbConnection.AutoMigrate(&db.User{}, &db.Principal{}, &db.APIKeyType{})
+	err := dbConnection.AutoMigrate(&db.User{}, &db.Principal{}, &db.APIKey{})
 
 	if err != nil {
 		log.Fatalf("Failed to perform migration: [%s]", err.Error())
 	}
 
 	dbConnection.Model(&db.User{}).Association("user_id")
-	dbConnection.Model(&db.APIKeyType{}).Association("apiKey")
+	dbConnection.Model(&db.APIKey{}).Association("apiKey")
 }
 
 func NewUser(user *db.User) {
@@ -46,7 +46,7 @@ func GetUserByUsername(username string) db.User {
 	dbConnection.Find(&principals, "user_id = ?", user.ID)
 	user.Principals = principals
 
-	var apiKey db.APIKeyType
+	var apiKey db.APIKey
 	dbConnection.Find(&apiKey, "user_id = ?", user.ID)
 	user.APIKey = apiKey
 
@@ -59,14 +59,14 @@ func GetUserByID(id uint) db.User {
 	return user
 }
 
-func GetAPIKey(apiKey db.APIKeyType) db.APIKeyType {
-	var key db.APIKeyType
+func GetAPIKey(apiKey db.APIKey) db.APIKey {
+	var key db.APIKey
 	dbConnection.First(&key, "key = ?", apiKey.Key)
 	return key
 }
 
-func GetApiKeyByID(id uint) db.APIKeyType {
-	var key db.APIKeyType
+func GetApiKeyByID(id uint) db.APIKey {
+	var key db.APIKey
 	dbConnection.First(&key, "user_id = ?", id)
 	return key
 }

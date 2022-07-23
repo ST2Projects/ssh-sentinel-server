@@ -1,0 +1,22 @@
+{
+  "CAPrivateKey": "CA",
+  "CAPublicKey": "CA.pub",
+  "MaxValidTime": "30m",
+  "db": {
+    "dialect": "sqlite3",
+    "username": "sentinel",
+    "password": "sentinel",
+    "connection": "resources/sentinel.db",
+    "dbName": "sentinel"
+  },
+  "tls": {
+    "local": true,
+    "certDir": "./resources",
+    "certDomains": [
+      "localhost"
+    ],
+    "certEmail": "",
+    "dnsProvider": "",
+    "dnsApiToken": ""
+  }
+}

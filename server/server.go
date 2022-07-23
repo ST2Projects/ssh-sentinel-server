@@ -3,13 +3,13 @@ package server
 import (
 	"crypto/rand"
 	"encoding/json"
-	"fmt"
 	"github.com/foomo/simplecert"
 	"github.com/foomo/tlsconfig"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -100,8 +100,6 @@ func ComputeValidity() (uint64, uint64) {
 
 func GetCAKey() (caPriv ssh.Signer) {
 
-	work, _ := os.Getwd()
-	log.Printf("Working dir [%s]", work)
 	keyFile := "resources/CA"
 	privKeyFile, err := ioutil.ReadFile(keyFile)
 
@@ -119,40 +117,111 @@ func GetCAKey() (caPriv ssh.Signer) {
 }
 
 func Version(response http.ResponseWriter, r *http.Request) {
-	io.WriteString(response, "Version 1")
+	io.WriteString(response, "Version: 0.0.0.1")
 }
 
-func Serve(port int) {
+func Serve() {
 
+	var (
+		certReloader *simplecert.CertReloader
+		err          error
+		numRenews    int
+		ctx, cancel  = context.WithCancel(context.Background())
+
+		// init strict tlsConfig (this will enforce the use of modern TLS configurations)
+		// you could use a less strict configuration if you have a customer facing web application that has visitors with old browsers
+		tlsConf = tlsconfig.NewServerTLSConfig(tlsconfig.TLSModeServerStrict)
+
+		// a simple constructor for a http.Server with our Handler
+		makeServer = func() *http.Server {
+			return &http.Server{
+				Addr:      ":443",
+				Handler:   makeRouter(),
+				TLSConfig: tlsConf,
+			}
+		}
+
+		// init server
+		srv = makeServer()
+
+		// init simplecert configuration
+		cfg = simplecert.Default
+	)
+
+	configuredTls := config.GetTLSConfig()
+	cfg.Local = configuredTls.Local
+	cfg.CacheDir = "./resources"
+	cfg.Domains = configuredTls.CertDomains
+	cfg.SSLEmail = configuredTls.CertEmail
+	cfg.DNSProvider = configuredTls.DNSProvider
+	cfg.HTTPAddress = ""
+	cfg.TLSAddress = ""
+
+	cfg.WillRenewCertificate = func() {
+		cancel()
+	}
+
+	cfg.DidRenewCertificate = func() {
+		numRenews++
+		// Restart the server
+		ctx, cancel = context.WithCancel(context.Background())
+		srv = makeServer()
+
+		// Force reload the cert
+		certReloader.ReloadNow()
+
+		go serve(ctx, srv)
+	}
+
+	certReloader, err = simplecert.Init(cfg, func() {
+		os.Exit(0)
+	})
+
+	if err != nil {
+		log.Fatalf("Simple cert init failed: %s\n", err)
+	}
+
+	// Redirect 80 -> 443
+	go http.ListenAndServe(":80", http.HandlerFunc(simplecert.Redirect))
+
+	tlsConf.GetCertificate = certReloader.GetCertificateFunc()
+	log.Infof("Serving at https://%s", configuredTls.CertDomains[0])
+	serve(ctx, srv)
+	<-make(chan bool)
+}
+
+func makeRouter() *mux.Router {
 	commonHandlers := alice.New(LoggingHandler, ErrorHandler, AuthenticationHandler)
+
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", Version)
 	router.HandleFunc("/version", Version)
 	router.Handle("/ssh", commonHandlers.ThenFunc(KeySignHandler))
 
-	certCfg := simplecert.Default
-	certCfg.Local = true
-	certCfg.CacheDir = "./resources"
-	certCfg.Domains = []string{"localhost", "manst5dstp01"}
-	certCfg.SSLEmail = "0x620x64@protonmail.com"
-	certCfg.DNSProvider = "cloudflare"
+	return router
+}
 
-	reloader, err := simplecert.Init(certCfg, nil)
+func serve(ctx context.Context, srv *http.Server) {
+	go func() {
+		if err := srv.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen %s\n", err)
+		}
+	}()
 
-	if err != nil {
-		log.Fatal(err)
+	log.Info("Server started")
+	<-ctx.Done()
+	log.Info("Server stopped")
+
+	ctxShutdown, cancel := context.WithTimeout(context.Background(), 5+time.Second)
+	defer func() {
+		cancel()
+	}()
+
+	err := srv.Shutdown(ctxShutdown)
+	if err == http.ErrServerClosed {
+		log.Info("Server stopped correctly")
+	} else {
+		log.Errorf("Error when stopping server %s\n", err)
 	}
-
-	bindAddr := fmt.Sprintf(":%d", port)
-	tlsConf := tlsconfig.NewServerTLSConfig(tlsconfig.TLSModeServerStrict)
-	tlsConf.GetCertificate = reloader.GetCertificateFunc()
-
-	server := &http.Server{
-		Addr:      bindAddr,
-		TLSConfig: tlsConf,
-		Handler:   router,
-	}
-
-	log.Fatal(server.ListenAndServeTLS("", ""))
 }
