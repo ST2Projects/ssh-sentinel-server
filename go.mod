@@ -9,7 +9,7 @@ require (
 	github.com/spf13/cobra v1.5.0
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	gorm.io/driver/sqlite v1.3.4
-	gorm.io/gorm v1.23.4
+	gorm.io/gorm v1.23.8
 )
 
 require (
