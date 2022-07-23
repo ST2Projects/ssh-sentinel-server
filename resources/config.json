@@ -8,5 +8,14 @@
     "password": "sentinel",
     "connection": "sentinel.db",
     "dbName": "sentinel"
+  },
+  "tls": {
+    "local": true,
+    "certDir": "./resources",
+    "certDomains": [
+      "localhost"
+    ],
+    "certEmail": "",
+    "dnsProvider": "cloudflare"
   }
 }

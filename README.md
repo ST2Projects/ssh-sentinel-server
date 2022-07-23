@@ -13,3 +13,8 @@ requirements. This projects aims to:
 
 - Be simple to use and deploy
 - Use sensible secure defaults
+
+## Development Dependencies
+
+- lego
+- mkcert

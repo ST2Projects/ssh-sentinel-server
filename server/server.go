@@ -4,6 +4,9 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"github.com/foomo/simplecert"
+	"github.com/foomo/tlsconfig"
+	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
@@ -122,16 +125,34 @@ func Version(response http.ResponseWriter, r *http.Request) {
 func Serve(port int) {
 
 	commonHandlers := alice.New(LoggingHandler, ErrorHandler, AuthenticationHandler)
-	mux := http.NewServeMux()
+	router := mux.NewRouter()
 
-	mux.HandleFunc("/", Version)
-	mux.HandleFunc("/version", Version)
-	mux.Handle("/ssh", commonHandlers.ThenFunc(KeySignHandler))
+	router.HandleFunc("/", Version)
+	router.HandleFunc("/version", Version)
+	router.Handle("/ssh", commonHandlers.ThenFunc(KeySignHandler))
 
-	bindAddr := fmt.Sprintf(":%d", port)
+	certCfg := simplecert.Default
+	certCfg.Local = true
+	certCfg.CacheDir = "./resources"
+	certCfg.Domains = []string{"localhost", "manst5dstp01"}
+	certCfg.SSLEmail = "0x620x64@protonmail.com"
+	certCfg.DNSProvider = "cloudflare"
 
-	err := http.ListenAndServe(bindAddr, mux)
+	reloader, err := simplecert.Init(certCfg, nil)
+
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	bindAddr := fmt.Sprintf(":%d", port)
+	tlsConf := tlsconfig.NewServerTLSConfig(tlsconfig.TLSModeServerStrict)
+	tlsConf.GetCertificate = reloader.GetCertificateFunc()
+
+	server := &http.Server{
+		Addr:      bindAddr,
+		TLSConfig: tlsConf,
+		Handler:   router,
+	}
+
+	log.Fatal(server.ListenAndServeTLS("", ""))
 }
