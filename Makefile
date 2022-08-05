@@ -12,3 +12,6 @@ release:
 
 release-dry:
 	$(shell goreleaser release --skip-publish)
+
+snapshot:
+	$(shell goreleaser release --snapshot --skip-publish --rm-dist)

@@ -31,5 +31,16 @@ signs:
   - id: signify
     signature: ${artifact}.sig
     cmd: signify
-    args: ["-S", "-s", "~/.signify/ssh-sentinel.sec", "-m", "${artifact}", "-x", "${artifact}.sig"]
+    args: ["-S", "-s", "{{ .Env.HOME }}/.signify/ssh-sentinel.sec", "-m", "${artifact}", "-x", "${artifact}.sig"]
     artifacts: checksum
+release:
+  prerelease: auto
+  mode: keep-existing
+gomod:
+  proxy: true
+  env:
+    - GOPROXY=https://proxy.golang.org,direct
+    - GOSUMDB=sum.golang.org
+    - GOPRIVATE=st2projects.com/ssh-sentinel-server
+  mod: mod
+  gobinary: go
