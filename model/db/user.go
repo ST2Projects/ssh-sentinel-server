@@ -1,12 +1,10 @@
 package db
 
 import (
-	"crypto/sha256"
-	"crypto/subtle"
-	"encoding/hex"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"ssh-sentinel-server/crypto"
 )
 
 type User struct {
@@ -34,40 +32,17 @@ type APIKey struct {
 func NewAPIKey() (APIKey, string) {
 	id := uuid.New().String()
 
-	sha := sha256.New()
-	sha.Write([]byte(id))
-	finalValue := sha.Sum(nil)
-
 	apiKey := APIKey{}
 
-	apiKey.Key = hex.EncodeToString(finalValue)
-
-	return apiKey, id
-}
-
-func AsAPIKey(key uuid.UUID) APIKey {
-	sha := sha256.New()
-	sha.Write([]byte(key.String()))
-	finalValue := sha.Sum(nil)
-
-	apiKey := APIKey{}
-	apiKey.Key = hex.EncodeToString(finalValue)
-	return apiKey
-}
-
-func (k *APIKey) Validate(other string) bool {
-	sha := sha256.New()
-	sha.Write([]byte(other))
-	otherSum := sha.Sum(nil)
-
-	thisDecoded, err := hex.DecodeString(k.Key)
+	k, err := crypto.GenerateHash(crypto.PasswordConfig{}.DefaultConfig(), id)
 
 	if err != nil {
-		log.Fatal("Failed to decode key", err)
+		log.Fatal("Cannot create key", err)
 	}
 
-	// ConstantTimeCompare returns 1 when equal...
-	return subtle.ConstantTimeCompare(thisDecoded, otherSum) == 1
+	apiKey.Key = k
+
+	return apiKey, id
 }
 
 func (p *Principal) String() string {

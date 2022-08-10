@@ -8,7 +8,7 @@ doc:
 	godoc -http=:6060
 
 release:
-	shell goreleaser release
+	$(shell goreleaser release --rm-dist)
 
 release-dry:
 	$(shell goreleaser release --skip-publish)
