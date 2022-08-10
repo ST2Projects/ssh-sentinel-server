@@ -14,6 +14,21 @@ requirements. This projects aims to:
 - Be simple to use and deploy
 - Use sensible secure defaults
 
+## Releases
+
+All releases are signed with [signify](https://github.com/aperezdc/signify) using this key:
+
+```
+untrusted comment: signify public key
+RWTZI8XJdh5lJ5/cWa8yZry/28x5frzb/PZqp4PL3IfFQ154BaX8ja4Q
+```
+
+You can verify the checksums using
+
+```shell
+signify -V -p path/to/public/key.pub -m checksums.txt
+```
+
 ## Development Dependencies
 
 - lego
