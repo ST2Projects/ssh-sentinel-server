@@ -36,11 +36,11 @@ signs:
 release:
   prerelease: auto
   mode: keep-existing
-gomod:
-  proxy: true
-  env:
-    - GOPROXY=https://proxy.golang.org,direct
-    - GOSUMDB=sum.golang.org
-    - GOPRIVATE=st2projects.com/ssh-sentinel-server
-  mod: mod
-  gobinary: go
+#gomod:
+#  proxy: true
+#  env:
+#    - GOPROXY=https://proxy.golang.org,direct
+#    - GOSUMDB=sum.golang.org
+#    - GOPRIVATE=st2projects.com/ssh-sentinel-server
+#  mod: mod
+#  gobinary: go
