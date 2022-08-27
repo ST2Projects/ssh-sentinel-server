@@ -16,6 +16,11 @@ archives:
       linux: Linux
       386: i386
       amd64: x86_64
+    files:
+      - samples
+      - README.md
+      - LICENSE
+      - install/Makefile
 checksum:
   name_template: 'checksums.txt'
 snapshot:

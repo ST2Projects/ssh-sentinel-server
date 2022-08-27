@@ -3,7 +3,6 @@ module github.com/st2projects/ssh-sentinel-server
 go 1.18
 
 require (
-	github.com/st2projects/ssh-sentinel-core v1.0.0
 	github.com/foomo/simplecert v1.8.3
 	github.com/foomo/tlsconfig v0.0.0-20180418120404-b67861b076c9
 	github.com/google/uuid v1.3.0
@@ -11,6 +10,7 @@ require (
 	github.com/justinas/alice v1.2.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.5.0
+	github.com/st2projects/ssh-sentinel-core v1.0.0
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 	golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e
 	gorm.io/driver/sqlite v1.3.6
