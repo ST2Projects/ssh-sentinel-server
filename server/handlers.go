@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"ssh-sentinel-server/crypto"
 	"ssh-sentinel-server/helper"
 	model "ssh-sentinel-server/model/http"
 	"ssh-sentinel-server/sql"
@@ -33,9 +34,10 @@ func AuthenticationHandler(next http.Handler) http.Handler {
 
 		user := sql.GetUserByUsername(signRequest.Username)
 
-		hasValidAPIKey := user.APIKey.Validate(signRequest.APIKey)
+		hasValidAPIKey, err := crypto.Validate(signRequest.APIKey, user.APIKey.Key)
 
 		if !hasValidAPIKey {
+			w.WriteHeader(http.StatusUnauthorized)
 			panic(helper.NewError("Unauthorised key"))
 		}
 
