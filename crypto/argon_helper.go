@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const hash_format = "$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s"
+const hashFormat = "$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s"
 
 type PasswordConfig struct {
 	time    uint32
@@ -38,7 +38,7 @@ func GenerateHash(config *PasswordConfig, s string) (string, error) {
 	saltB64 := base64.RawStdEncoding.EncodeToString(salt)
 	hashB64 := base64.RawStdEncoding.EncodeToString(hash)
 
-	finalHash := fmt.Sprintf(hash_format, argon2.Version, config.memory, config.time, config.threads, saltB64, hashB64)
+	finalHash := fmt.Sprintf(hashFormat, argon2.Version, config.memory, config.time, config.threads, saltB64, hashB64)
 
 	return finalHash, nil
 }
