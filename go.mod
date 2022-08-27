@@ -1,8 +1,9 @@
-module ssh-sentinel-server
+module github.com/st2projects/ssh-sentinel-server
 
 go 1.18
 
 require (
+	github.com/st2projects/ssh-sentinel-core v1.0.0
 	github.com/foomo/simplecert v1.8.3
 	github.com/foomo/tlsconfig v0.0.0-20180418120404-b67861b076c9
 	github.com/google/uuid v1.3.0

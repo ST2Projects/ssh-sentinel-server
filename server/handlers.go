@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"github.com/st2projects/ssh-sentinel-core/model"
+	"github.com/st2projects/ssh-sentinel-server/crypto"
+	"github.com/st2projects/ssh-sentinel-server/helper"
+	"github.com/st2projects/ssh-sentinel-server/sql"
 	"io/ioutil"
 	"net/http"
-	"ssh-sentinel-server/crypto"
-	"ssh-sentinel-server/helper"
-	model "ssh-sentinel-server/model/http"
-	"ssh-sentinel-server/sql"
 	"time"
 )
 

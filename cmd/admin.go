@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"ssh-sentinel-server/app"
+	"github.com/st2projects/ssh-sentinel-server/app"
 )
 
 var create bool

@@ -3,8 +3,8 @@ package db
 import (
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
+	"github.com/st2projects/ssh-sentinel-server/crypto"
 	"gorm.io/gorm"
-	"ssh-sentinel-server/crypto"
 )
 
 type User struct {

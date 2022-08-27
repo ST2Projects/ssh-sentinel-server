@@ -8,15 +8,15 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	log "github.com/sirupsen/logrus"
+	"github.com/st2projects/ssh-sentinel-core/model"
+	"github.com/st2projects/ssh-sentinel-server/config"
+	"github.com/st2projects/ssh-sentinel-server/helper"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/context"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"ssh-sentinel-server/config"
-	"ssh-sentinel-server/helper"
-	http2 "ssh-sentinel-server/model/http"
 	"time"
 )
 
@@ -49,7 +49,7 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
 	signedCert := ssh.MarshalAuthorizedKey(cert)
 
-	var response = http2.NewKeySignResponse(true, "")
+	var response = model.NewKeySignResponse(true, "")
 	response.SignedKey = string(signedCert)
 
 	writer.WriteHeader(http.StatusOK)
@@ -57,10 +57,10 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
 }
 
-func MarshallSigningRequest(requestReader io.Reader) (http2.KeySignRequest, error) {
+func MarshallSigningRequest(requestReader io.Reader) (model.KeySignRequest, error) {
 
 	body, err := ioutil.ReadAll(requestReader)
-	signRequest := http2.KeySignRequest{}
+	signRequest := model.KeySignRequest{}
 
 	if err == nil {
 		json.Unmarshal(body, &signRequest)

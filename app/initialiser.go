@@ -2,9 +2,9 @@ package app
 
 import (
 	log "github.com/sirupsen/logrus"
-	"ssh-sentinel-server/config"
-	"ssh-sentinel-server/server"
-	"ssh-sentinel-server/sql"
+	"github.com/st2projects/ssh-sentinel-server/config"
+	"github.com/st2projects/ssh-sentinel-server/server"
+	"github.com/st2projects/ssh-sentinel-server/sql"
 )
 
 func InitialiseApp(configPath string, devMode bool) {
