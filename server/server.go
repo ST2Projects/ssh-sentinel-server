@@ -3,6 +3,7 @@ package server
 import (
 	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"github.com/foomo/simplecert"
 	"github.com/foomo/tlsconfig"
 	"github.com/gorilla/mux"
@@ -11,6 +12,7 @@ import (
 	"github.com/st2projects/ssh-sentinel-core/model"
 	"github.com/st2projects/ssh-sentinel-server/config"
 	"github.com/st2projects/ssh-sentinel-server/helper"
+	cmd_model "github.com/st2projects/ssh-sentinel-server/model"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/context"
 	"io"
@@ -120,7 +122,7 @@ func Version(response http.ResponseWriter, r *http.Request) {
 	io.WriteString(response, "Version: 0.0.0.1")
 }
 
-func Serve() {
+func Serve(httpConfig *cmd_model.HTTPConfig) {
 
 	var (
 		certReloader *simplecert.CertReloader
@@ -135,7 +137,7 @@ func Serve() {
 		// a simple constructor for a http.Server with our Handler
 		makeServer = func() *http.Server {
 			return &http.Server{
-				Addr:      ":443",
+				Addr:      fmt.Sprintf(":%d", httpConfig.HttpsPort),
 				Handler:   makeRouter(),
 				TLSConfig: tlsConf,
 			}
@@ -182,7 +184,7 @@ func Serve() {
 	}
 
 	// Redirect 80 -> 443
-	go http.ListenAndServe(":80", http.HandlerFunc(simplecert.Redirect))
+	go http.ListenAndServe(fmt.Sprintf(":%d", httpConfig.HttpPort), http.HandlerFunc(simplecert.Redirect))
 
 	tlsConf.GetCertificate = certReloader.GetCertificateFunc()
 	log.Infof("Serving at https://%s", configuredTls.CertDomains[0])
