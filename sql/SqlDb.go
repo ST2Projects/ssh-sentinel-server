@@ -2,10 +2,10 @@ package sql
 
 import (
 	log "github.com/sirupsen/logrus"
+	"github.com/st2projects/ssh-sentinel-server/config"
+	"github.com/st2projects/ssh-sentinel-server/model/db"
 	_ "gorm.io/driver/sqlite" // Import sqlite3 driver
 	"gorm.io/gorm"
-	"ssh-sentinel-server/config"
-	"ssh-sentinel-server/model/db"
 )
 
 var dbConnection *gorm.DB

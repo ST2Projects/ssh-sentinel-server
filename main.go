@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ssh-sentinel-server/cmd"
+	"github.com/st2projects/ssh-sentinel-server/cmd"
 )
 
 func main() {

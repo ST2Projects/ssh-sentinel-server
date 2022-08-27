@@ -1,6 +1,6 @@
 package server
 
-import "ssh-sentinel-server/model/db"
+import "github.com/st2projects/ssh-sentinel-server/model/db"
 
 func CheckPrincipals(allowed []db.Principal, requested []string) bool {
 

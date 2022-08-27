@@ -6,6 +6,35 @@ A simple to use and deploy SSH CA server.
 
 Once ready, I will update the README and provide some more info in terms of usage and deployment
 
+## Installation
+
+The release archive contains the binary `ssh-sentinel-server` and a samples directory containing a config template and a systemd service file.
+
+You **will** need to edit the `config.json` to suit your needs. You may need to edit the service file depending on your OS.
+
+To install, unpack the archive into the `/opt` directory then run the then install
+
+```shell
+mkdir /opt/sentinel
+# Copy archive into directory
+tar xvzf ssh-sentinel-server_$VERSION_$ARCH.tar.gz
+
+make install
+```
+
+## Configuration
+
+Configuration is defined in the `config.json`. Properties are explained below. All paths are relative to the `resources` directory
+
+- `CAPrivateKey` - Name of the CA private key. The key must be unencrypted - a future enhancement will allow encrypted keys
+- `CAPublicKey` - Name of the CA public key.
+- `MaxValidTime` - Maximum lifespan of signed keys, in the normal [go duration format](https://pkg.go.dev/time#ParseDuration)
+- `db.dialect` - Must be `sqlite3`. A future release will add support for other DBs
+- `db.username` - Username of the DB user
+- `db.password` - Password of the DB user
+- `db.connection` - Connection URL for the DB. For sqlite3 this is a file path
+- `db.dbName` - Name of the DB
+
 ## Goals
 
 There are a couple of SSH CA servers out there - I have found them all difficult to use and have specific platform

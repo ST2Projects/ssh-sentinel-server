@@ -171,4 +171,4 @@ fabric.properties
 
 resources
 dist/
-./ssh-sentinel-server
+ssh-sentinel-server

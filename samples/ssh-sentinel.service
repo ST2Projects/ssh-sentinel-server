@@ -1,0 +1,14 @@
+[Unit]
+Description=SSH Sentinel Service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStart=/opt/sentinel/ssh-sentinel-server --config /opt/sentinel/config.json
+SyslogIdentifier=semaphore
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

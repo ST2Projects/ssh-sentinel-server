@@ -2,9 +2,9 @@ package app
 
 import (
 	log "github.com/sirupsen/logrus"
-	"ssh-sentinel-server/config"
-	"ssh-sentinel-server/model/db"
-	"ssh-sentinel-server/sql"
+	"github.com/st2projects/ssh-sentinel-server/config"
+	"github.com/st2projects/ssh-sentinel-server/model/db"
+	"github.com/st2projects/ssh-sentinel-server/sql"
 )
 
 func RunAdmin(configPath string, createUser bool, name string, username string, principals []string) {
