@@ -61,7 +61,7 @@ func AuthenticationHandler(next http.Handler) http.Handler {
 func authorisationFailed(w http.ResponseWriter, msg string, args ...any) {
 	w.WriteHeader(http.StatusUnauthorized)
 
-	log.Errorf(msg, args)
+	log.Errorf(msg, args...)
 
 	panic(helper.NewError("Authentication failed"))
 }
