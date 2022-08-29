@@ -6,11 +6,13 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/st2projects/ssh-sentinel-core/model"
+	"github.com/st2projects/ssh-sentinel-server/config"
 	"github.com/st2projects/ssh-sentinel-server/crypto"
 	"github.com/st2projects/ssh-sentinel-server/helper"
 	"github.com/st2projects/ssh-sentinel-server/sql"
 	"io"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -93,4 +95,31 @@ func ErrorHandler(next http.Handler) http.Handler {
 	}
 
 	return http.HandlerFunc(fn)
+}
+
+func PingHandler(writer http.ResponseWriter, _ *http.Request) {
+
+	writer.WriteHeader(http.StatusOK)
+	_, err := writer.Write([]byte(fmt.Sprintf("Pong\nTime now is %s", time.Now().Format("2006-01-02 15:04:05"))))
+	if err != nil {
+		log.Errorf("Failed to write ping response %s", err.Error())
+	}
+}
+
+func CAPubKeyHandler(writer http.ResponseWriter, _ *http.Request) {
+	conf := config.Config
+
+	pubKeyPath := conf.CAPublicKey
+	pubKey, err := os.ReadFile(pubKeyPath)
+
+	if err != nil {
+		log.Errorf("Failed to read pub key %s", err)
+	}
+
+	writer.WriteHeader(http.StatusOK)
+	_, err = writer.Write(pubKey)
+
+	if err != nil {
+		log.Errorf("faile to write response: %s", err.Error())
+	}
 }

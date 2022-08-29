@@ -12,7 +12,7 @@ import (
 	"github.com/st2projects/ssh-sentinel-core/model"
 	"github.com/st2projects/ssh-sentinel-server/config"
 	"github.com/st2projects/ssh-sentinel-server/helper"
-	cmd_model "github.com/st2projects/ssh-sentinel-server/model"
+	cmdModel "github.com/st2projects/ssh-sentinel-server/model"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/context"
 	"io"
@@ -43,7 +43,7 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 		panic(helper.NewError("Failed to parse key: [%s]", err))
 	}
 
-	cert, err := MakeSSHCertificate(pubKeyDisk, nil)
+	cert, err := MakeSSHCertificate(pubKeyDisk, signRequest.Principals)
 
 	if err != nil {
 		panic(helper.NewError("Failed to sign cert: [%s]", err))
@@ -83,7 +83,15 @@ func MakeSSHCertificate(pubKey ssh.PublicKey, principals []string) (*ssh.Certifi
 		ValidPrincipals: principals,
 		ValidAfter:      validAfter,
 		ValidBefore:     validBefore,
-		Permissions:     ssh.Permissions{},
+		Permissions: ssh.Permissions{
+			CriticalOptions: map[string]string{
+				"source-address": "0.0.0.0/0",
+			},
+			Extensions: map[string]string{
+				"permit-pty":     "",
+				"permit-user-rc": "",
+			},
+		},
 	}
 
 	err := cert.SignCert(rand.Reader, caPriv)
@@ -118,11 +126,7 @@ func GetCAKey() (caPriv ssh.Signer) {
 	return privKey
 }
 
-func Ping(response http.ResponseWriter, r *http.Request) {
-	io.WriteString(response, fmt.Sprintf("Pong\n Time now is %s", time.Now().Format("2006-01-02 15:04:05")))
-}
-
-func Serve(httpConfig *cmd_model.HTTPConfig) {
+func Serve(httpConfig *cmdModel.HTTPConfig) {
 
 	var (
 		certReloader *simplecert.CertReloader
@@ -193,14 +197,15 @@ func Serve(httpConfig *cmd_model.HTTPConfig) {
 }
 
 func makeRouter() *mux.Router {
-	commonHandlers := alice.New(LoggingHandler, ErrorHandler, AuthenticationHandler)
+	commonHandlers := alice.New(LoggingHandler, ErrorHandler)
+	authHandlers := commonHandlers.Append(AuthenticationHandler)
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/", Ping)
-	router.HandleFunc("/ping", Ping)
-	router.Handle("/ssh", commonHandlers.ThenFunc(KeySignHandler))
-
+	router.Handle("/", commonHandlers.ThenFunc(PingHandler))
+	router.Handle("/ping", commonHandlers.ThenFunc(PingHandler))
+	router.Handle("/capubkey", commonHandlers.ThenFunc(CAPubKeyHandler))
+	router.Handle("/ssh", authHandlers.ThenFunc(KeySignHandler))
 	return router
 }
 
