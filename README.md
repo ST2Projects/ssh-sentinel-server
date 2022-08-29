@@ -2,9 +2,7 @@
 
 A simple to use and deploy SSH CA server.
 
-**This is a Work In Progress** - the project is in its early days and is not ready to use anywhere.
-
-Once ready, I will update the README and provide some more info in terms of usage and deployment
+**This is a Work In Progress** - the project is in its early days. It is functional and I'm using it for my own hosts **but** you use it at your own risk
 
 ## Installation
 
