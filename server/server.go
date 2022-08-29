@@ -118,8 +118,8 @@ func GetCAKey() (caPriv ssh.Signer) {
 	return privKey
 }
 
-func Version(response http.ResponseWriter, r *http.Request) {
-	io.WriteString(response, "Version: 0.0.0.1")
+func Ping(response http.ResponseWriter, r *http.Request) {
+	io.WriteString(response, fmt.Sprintf("Pong\n Time now is %s", time.Now().Format("2006-01-02 15:04:05")))
 }
 
 func Serve(httpConfig *cmd_model.HTTPConfig) {
@@ -137,7 +137,7 @@ func Serve(httpConfig *cmd_model.HTTPConfig) {
 		// a simple constructor for a http.Server with our Handler
 		makeServer = func() *http.Server {
 			return &http.Server{
-				Addr:      fmt.Sprintf(":%d", httpConfig.HttpsPort),
+				Addr:      fmt.Sprintf("0.0.0.0:%d", httpConfig.HttpsPort),
 				Handler:   makeRouter(),
 				TLSConfig: tlsConf,
 			}
@@ -184,10 +184,10 @@ func Serve(httpConfig *cmd_model.HTTPConfig) {
 	}
 
 	// Redirect 80 -> 443
-	go http.ListenAndServe(fmt.Sprintf(":%d", httpConfig.HttpPort), http.HandlerFunc(simplecert.Redirect))
+	go http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", httpConfig.HttpPort), http.HandlerFunc(simplecert.Redirect))
 
 	tlsConf.GetCertificate = certReloader.GetCertificateFunc()
-	log.Infof("Serving at https://%s", configuredTls.CertDomains[0])
+	log.Infof("Serving at https://%s:%d", configuredTls.CertDomains[0], httpConfig.HttpsPort)
 	serve(ctx, srv)
 	<-make(chan bool)
 }
@@ -197,8 +197,8 @@ func makeRouter() *mux.Router {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/", Version)
-	router.HandleFunc("/version", Version)
+	router.HandleFunc("/", Ping)
+	router.HandleFunc("/ping", Ping)
 	router.Handle("/ssh", commonHandlers.ThenFunc(KeySignHandler))
 
 	return router

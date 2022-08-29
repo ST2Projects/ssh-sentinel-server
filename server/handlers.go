@@ -9,7 +9,7 @@ import (
 	"github.com/st2projects/ssh-sentinel-server/crypto"
 	"github.com/st2projects/ssh-sentinel-server/helper"
 	"github.com/st2projects/ssh-sentinel-server/sql"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 )
@@ -18,7 +18,7 @@ func AuthenticationHandler(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(contentTypeKey, jsonContentType)
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 
 		if err != nil {
 			panic(helper.NewError("Failed to marshall request %s", err))
@@ -26,31 +26,46 @@ func AuthenticationHandler(next http.Handler) http.Handler {
 
 		signRequest, err := MarshallSigningRequest(bytes.NewReader(body))
 
-		r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 		if err != nil {
 			panic(helper.NewError("Failed to marshall request %s", err))
 		}
 
-		user := sql.GetUserByUsername(signRequest.Username)
+		user, err := sql.GetUserByUsername(signRequest.Username)
+
+		if err != nil {
+			authorisationFailed(w, "No such user %s", helper.Sanitize(signRequest.Username))
+		}
 
 		hasValidAPIKey, err := crypto.Validate(signRequest.APIKey, user.APIKey.Key)
 
 		if !hasValidAPIKey {
-			w.WriteHeader(http.StatusUnauthorized)
-			panic(helper.NewError("Unauthorised key"))
+			authorisationFailed(w, "Invalid API key for user %s", helper.Sanitize(signRequest.Username))
 		}
 
 		hasValidPrincipals := CheckPrincipals(user.Principals, signRequest.Principals)
 
 		if !hasValidPrincipals {
-			panic(helper.NewError("One or more unauthorised principals requested %v", signRequest.Principals))
+			// Sanitize the principals for logging
+			helper.SanitizeStringSlice(signRequest.Principals)
+			authorisationFailed(w, "One or more unauthorised principals requested %v", signRequest.Principals)
 		}
+
+		log.Infof("User %s is authenticated", helper.Sanitize(signRequest.Username))
 
 		next.ServeHTTP(w, r)
 	}
 
 	return http.HandlerFunc(fn)
+}
+
+func authorisationFailed(w http.ResponseWriter, msg string, args ...any) {
+	w.WriteHeader(http.StatusUnauthorized)
+
+	log.Errorf(msg, args...)
+
+	panic(helper.NewError("Authentication failed"))
 }
 
 func LoggingHandler(next http.Handler) http.Handler {

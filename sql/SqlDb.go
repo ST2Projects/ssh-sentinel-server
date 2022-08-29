@@ -3,6 +3,7 @@ package sql
 import (
 	log "github.com/sirupsen/logrus"
 	"github.com/st2projects/ssh-sentinel-server/config"
+	"github.com/st2projects/ssh-sentinel-server/helper"
 	"github.com/st2projects/ssh-sentinel-server/model/db"
 	_ "gorm.io/driver/sqlite" // Import sqlite3 driver
 	"gorm.io/gorm"
@@ -37,10 +38,12 @@ func NewUser(user *db.User) {
 	dbConnection.Create(user)
 }
 
-func GetUserByUsername(username string) db.User {
+func GetUserByUsername(username string) (db.User, error) {
 
 	var user = db.User{}
-	dbConnection.First(&user, "user_name = ? ", username)
+	if dbc := dbConnection.First(&user, "user_name = ? ", username); dbc.Error != nil {
+		return db.User{}, helper.NewError("No user with username %s found", username)
+	}
 
 	var principals []db.Principal
 	dbConnection.Find(&principals, "user_id = ?", user.ID)
@@ -50,7 +53,7 @@ func GetUserByUsername(username string) db.User {
 	dbConnection.Find(&apiKey, "user_id = ?", user.ID)
 	user.APIKey = apiKey
 
-	return user
+	return user, nil
 }
 
 func GetUserByID(id uint) db.User {
