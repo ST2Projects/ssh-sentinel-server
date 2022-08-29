@@ -35,13 +35,13 @@ func AuthenticationHandler(next http.Handler) http.Handler {
 		user, err := sql.GetUserByUsername(signRequest.Username)
 
 		if err != nil {
-			authorisationFailed(w, "No such user %s", signRequest.Username)
+			authorisationFailed(w, "No such user %s", helper.Sanitize(signRequest.Username))
 		}
 
 		hasValidAPIKey, err := crypto.Validate(signRequest.APIKey, user.APIKey.Key)
 
 		if !hasValidAPIKey {
-			authorisationFailed(w, "Invalid API key for user %s", signRequest.Username)
+			authorisationFailed(w, "Invalid API key for user %s", helper.Sanitize(signRequest.Username))
 		}
 
 		hasValidPrincipals := CheckPrincipals(user.Principals, signRequest.Principals)
@@ -50,7 +50,7 @@ func AuthenticationHandler(next http.Handler) http.Handler {
 			authorisationFailed(w, "One or more unauthorised principals requested %v", signRequest.Principals)
 		}
 
-		log.Infof("User %s is authenticated", signRequest.Username)
+		log.Infof("User %s is authenticated", helper.Sanitize(signRequest.Username))
 
 		next.ServeHTTP(w, r)
 	}
