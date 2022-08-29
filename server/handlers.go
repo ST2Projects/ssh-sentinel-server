@@ -47,6 +47,8 @@ func AuthenticationHandler(next http.Handler) http.Handler {
 		hasValidPrincipals := CheckPrincipals(user.Principals, signRequest.Principals)
 
 		if !hasValidPrincipals {
+			// Sanitize the principals for logging
+			helper.SanitizeStringSlice(signRequest.Principals)
 			authorisationFailed(w, "One or more unauthorised principals requested %v", signRequest.Principals)
 		}
 
