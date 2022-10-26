@@ -32,6 +32,8 @@ cp samples/ssh-sentinel.service /etc/systemd/system/
 systemctl daemon-reload
 ```
 
+I'm working on an ansible role to do this and will update the readme when complete
+
 ### Configuration
 
 Configuration is defined in the `config.json`. Properties are explained below. Full paths must be provided
@@ -105,7 +107,23 @@ Servers require some configuration to use the CA. In short:
 - Edit `/etc/ssh/sshd_config` and add `TrustedUserCAKeys /etc/ssh/ca.pub`
 - Restart SSHD `service sshd restart`
 
-The easiest way to do this across an estate is with ansible. I will publish a role on ansible-galaxy to do this but you can create your own if required / desired
+The easiest way to do this across an estate is with ansible. There is an [ansible galaxy role available](https://galaxy.ansible.com/neo1908/install_ssh_ca)
+
+Create a new playbook called `deploy-sentinel-ca.yml` with something like 
+
+```yaml
+- hosts: sentinel_managed
+  vars:
+    auth_url: https://auth.your.domain.com
+    key_file: /etc/ssh/ca.pub
+
+  roles:
+    - { role: neo1908.install_ssh_ca }
+```
+
+Pull the role with `ansible-galaxy install neo1908.install_ssh_ca`
+
+Then run your playbook `ansible-playbook deploy-sentinel-ca.yml`
 
 ## Releases
 
