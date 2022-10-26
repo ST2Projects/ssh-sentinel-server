@@ -2,7 +2,17 @@
 
 A simple to use and deploy SSH CA server.
 
-**This is a Work In Progress** - the project is in its early days. It is functional and I'm using it for my own hosts **but** you use it at your own risk
+**This is a Work In Progress** - the project is in its early days. It is functional, and I'm using it for my own hosts, **but** you use it at your own risk
+
+## Goals
+
+There are a couple of SSH CA servers out there - I have found them all difficult to use and have specific platform
+requirements. This projects aims to:
+
+- Be simple to use and deploy
+- Use sensible secure defaults
+
+I'm also using this project to learn go, so if you come across it and notice something dumb please let me know by opening an issue!
 
 ## Installation
 
@@ -17,12 +27,14 @@ mkdir /opt/sentinel
 # Copy archive into directory
 tar xvzf ssh-sentinel-server_$VERSION_$ARCH.tar.gz
 
-make install
+cp samples/config.json .
+cp samples/ssh-sentinel.service /etc/systemd/system/
+systemctl daemon-reload
 ```
 
-## Configuration
+### Configuration
 
-Configuration is defined in the `config.json`. Properties are explained below. All paths are relative to the `resources` directory
+Configuration is defined in the `config.json`. Properties are explained below. Full paths must be provided
 
 - `CAPrivateKey` - Name of the CA private key. The key must be unencrypted - a future enhancement will allow encrypted keys
 - `CAPublicKey` - Name of the CA public key.
@@ -32,14 +44,68 @@ Configuration is defined in the `config.json`. Properties are explained below. A
 - `db.password` - Password of the DB user
 - `db.connection` - Connection URL for the DB. For sqlite3 this is a file path
 - `db.dbName` - Name of the DB
+- `tls.local` - When set to `true` the server will generate a local TLS certificate. When `false` the server will generate a Let's Encrypt cert
+- `tls.certDir` - Directory in which the generated certificate will be generated
+- `tls.certDomains` - A list of domains to be included in the certificate.
+- `tls.certEmail` - Needed when generating a certificate with let's encrypt
+- `tls.dnsProvider` - Only `cloudflare` is supported at the moment. A future release will open up support for other providers
+- `tls.dnsAPIToken` - The zone API token from cloudflare
 
-## Goals
+### Generate a CA
 
-There are a couple of SSH CA servers out there - I have found them all difficult to use and have specific platform
-requirements. This projects aims to:
+You can generate a SSH CA with `ssh-keygen`. I suggest using ECDSA keys as they are smaller but this is not a requirement.
 
-- Be simple to use and deploy
-- Use sensible secure defaults
+```shell
+ssh-keygen -t ed25519 -f sentinel-ca -C sentinel-CA
+```
+
+**The key must not have a password** - this will be improved in a future release
+
+### Adding users
+
+Once you have the service installed you'll need to add some users. I hope to improve this process later but for now you can do it via the `admin` command
+
+```shell
+./ssh-sentinel-server admin -h
+Create / delete users
+
+Usage:
+  ssh-sentinel-server admin [flags]
+
+Flags:
+  -c, --config string        Config file
+  -C, --create               If set a new user will be created
+  -h, --help                 help for admin
+  -n, --name string          User's name
+  -P, --principals strings   A list of principals for the user
+  -U, --username string      Username
+```
+
+So to add a user
+
+```shell
+./ssh-sentinel-server admin -c config.json -C -n test -P test1 test2 -U test
+```
+
+Not that the username is the user associated with this service. The principals list the allowed usernames on the server you will ssh to.
+
+## Usage
+
+Here are some high level usage details
+
+### Clients
+
+The server stands up as a restful HTTP/S service. You can post requests via curl ( see [api docs](./api-docs.yaml) for the API ) or you can use the [CLI client](https://github.com/ST2Projects/ssh-sentinel-client)
+
+### Servers
+
+Servers require some configuration to use the CA. In short:
+
+- Copy the CA **public key** to the server and save it in `/etc/ssh/ca.pub`
+- Edit `/etc/ssh/sshd_config` and add `TrustedUserCAKeys /etc/ssh/ca.pub`
+- Restart SSHD `service sshd restart`
+
+The easiest way to do this across an estate is with ansible. I will publish a role on ansible-galaxy to do this but you can create your own if required / desired
 
 ## Releases
 

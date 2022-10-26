@@ -1,0 +1,113 @@
+swagger: "2.0"
+info:
+  title: SSH-Sentinel
+  description: Sentinel API
+  version: 1.0.0
+host: localhost:443
+consumes:
+  - application/json
+produces:
+  - application/json
+  - text/plain
+schemes:
+  - https
+basePath: /
+
+definitions:
+  KeySignRequest:
+    type: object
+    description: A signing request
+    properties:
+      username:
+        type: string
+        example: testUser-1
+        description: The client username ( with the service )
+      api_key:
+        type: string
+        pattern: [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}
+        example: c7ce5f4a-ae6b-4232-a458-62855d0b9f29
+        description: The API Key provided by the service at registration
+      principals:
+        type: array
+        description: A list of usernames to be included with the certificate. Usernames are with the target services
+      key:
+        type: string
+        description: The public key to sign
+  KeySignResponse:
+    type: object
+    description: A signing response
+    properties:
+      success:
+        type: boolean
+        description: Indicates if the the request was a success
+        example: false
+      message:
+        type: string
+        description: Any message / info returned by the server ( e.g. an error message )
+        example: "Authentication failure"
+      signedKey:
+        type: string
+        description: The signed key / certificate
+      notBefore:
+        type: integer
+        description: UNIX Epoch of the certificate start time
+        example: 1666793056
+      notAfter:
+        type: integer
+        description: UNIX Epoch of the certificate end time
+        example: 1666793056
+  Pong:
+    type: string
+  CAPubKey:
+    type: string
+
+
+
+paths:
+  /ping:
+    get:
+      summary: A Ping test
+      produces:
+        - text/plain
+      security: []
+      responses:
+        200:
+          description: A successful response
+          schema:
+            $ref: "#/definitions/Pong"
+          headers:
+            content-type:
+              type: string
+              x-example: text/plain; charset=utf-8
+  /ssh:
+    post:
+      summary: Performs signing
+      produces:
+        - application/json
+      security: []
+      parameters:
+        - name: Request body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/KeySignRequest"
+      responses:
+        200:
+          description: Successful request
+          schema:
+            $ref: "#/definitions/KeySignResponse"
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/KeySignResponse"
+  /capubkey:
+    get:
+      summary: Get the current CA public key
+      produces:
+        - text/plain
+      security: []
+      responses:
+        200:
+          description: A successful response
+          schema:
+            $ref: "#/definitions/CAPubKey"
