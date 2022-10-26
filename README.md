@@ -22,7 +22,7 @@ make install
 
 ## Configuration
 
-Configuration is defined in the `config.json`. Properties are explained below. All paths are relative to the `resources` directory
+Configuration is defined in the `config.json`. Properties are explained below. Full paths must be provided
 
 - `CAPrivateKey` - Name of the CA private key. The key must be unencrypted - a future enhancement will allow encrypted keys
 - `CAPublicKey` - Name of the CA public key.
@@ -32,6 +32,12 @@ Configuration is defined in the `config.json`. Properties are explained below. A
 - `db.password` - Password of the DB user
 - `db.connection` - Connection URL for the DB. For sqlite3 this is a file path
 - `db.dbName` - Name of the DB
+- `tls.local` - When set to `true` the server will generate a local TLS certificate. When `false` the server will generate a Let's Encrypt cert
+- `tls.certDir` - Directory in which the generated certificate will be generated
+- `tls.certDomains` - A list of domains to be included in the certificate.
+- `tls.certEmail` - Needed when generating a certificate with let's encrypt
+- `tls.dnsProvider` - Only `cloudflare` is supported at the moment. A future release will open up support for other providers
+- `tls.dnsAPIToken` - The zone API token from cloudflare
 
 ## Goals
 
