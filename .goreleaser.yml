@@ -19,7 +19,6 @@ archives:
       - samples
       - README.md
       - LICENSE
-      - install/Makefile
 checksum:
   name_template: 'checksums.txt'
 snapshot:

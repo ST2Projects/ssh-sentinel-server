@@ -58,6 +58,8 @@ definitions:
         example: 1666793056
   Pong:
     type: string
+  CAPubKey:
+    type: string
 
 
 
@@ -98,4 +100,14 @@ paths:
           description: Unauthorized
           schema:
             $ref: "#/definitions/KeySignResponse"
-
+  /capubkey:
+    get:
+      summary: Get the current CA public key
+      produces:
+        - text/plain
+      security: []
+      responses:
+        200:
+          description: A successful response
+          schema:
+            $ref: "#/definitions/CAPubKey"
