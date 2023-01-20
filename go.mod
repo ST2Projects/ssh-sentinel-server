@@ -13,7 +13,7 @@ require (
 	github.com/st2projects/ssh-sentinel-core v1.0.0
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 	golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e
-	gorm.io/driver/sqlite v1.4.3
+	gorm.io/driver/sqlite v1.4.4
 	gorm.io/gorm v1.24.3
 )
 
