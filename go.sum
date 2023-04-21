@@ -222,8 +222,8 @@ github.com/exoscale/egoscale v0.67.0/go.mod h1:wi0myUxPsV8SdEtdJHQJxFLL/wEw9fiw9
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/structs v1.1.0 h1:Q7juDM0QtcnhCpeyLGQKyg4TOIghuNXrkL32pHAUMxo=
 github.com/fatih/structs v1.1.0/go.mod h1:9NiDSp5zOcgEDl+j00MP/WkGVPOlPRLejGD8Ga6PJ7M=
-github.com/foomo/simplecert v1.8.3 h1:iHsLNbn5fmJwL0xGm2fuu4pmWanlmPdUpeJJx1fgKy0=
-github.com/foomo/simplecert v1.8.3/go.mod h1:/YyiB1PVfhlCj5CT97//efEIIqFpkAimT5n5zYjVG3w=
+github.com/foomo/simplecert v1.8.5 h1:qkBtmLb7wXg9NY4KDXU1UflpvHCQz+r25/60rcy91/0=
+github.com/foomo/simplecert v1.8.5/go.mod h1:/YyiB1PVfhlCj5CT97//efEIIqFpkAimT5n5zYjVG3w=
 github.com/foomo/tlsconfig v0.0.0-20180418120404-b67861b076c9 h1:RPOsDNbnDUFaSt/3bCxUsaGCJsKqA6dGubevl20nE9g=
 github.com/foomo/tlsconfig v0.0.0-20180418120404-b67861b076c9/go.mod h1:OdiGKKgTAfMv7x9Hh9qYFueue77tr09LUAxwy2+M8wY=
 github.com/form3tech-oss/jwt-go v3.2.2+incompatible/go.mod h1:pbq4aXjuKjdthFRnoDwaVPLA+WlJuPGy+QneDUgJi2k=
