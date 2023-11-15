@@ -9,7 +9,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/justinas/alice v1.2.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/st2projects/ssh-sentinel-core v1.0.0
 	golang.org/x/crypto v0.15.0
 	golang.org/x/net v0.18.0
