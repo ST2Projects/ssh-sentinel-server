@@ -9,11 +9,10 @@ before:
     # you may remove this if you don't need go generate
     - go generate ./...
 builds:
-  - env: []
-    goos:
-      - linux
   - goarch:
       - amd64
+    goos:
+      - linux
 
 archives:
   - files:
