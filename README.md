@@ -131,7 +131,7 @@ All releases are signed with [signify](https://github.com/aperezdc/signify) usin
 
 ```
 untrusted comment: st2projects-code-signing public key
-RWRHYnSHkgPLIU5lsrxJHHv/I3/fOWAGfyr5Amvlo0npeok5RTR2pMM
+RWT+c7SH0ADLx3ndyVVDHySn8E+tsRqvVRmNxkeaU3wxG6pzRDtWMp4k
 ```
 
 You can verify the checksums using
