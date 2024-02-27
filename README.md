@@ -130,8 +130,8 @@ Then run your playbook `ansible-playbook deploy-sentinel-ca.yml`
 All releases are signed with [signify](https://github.com/aperezdc/signify) using this key:
 
 ```
-untrusted comment: signify public key
-RWTZI8XJdh5lJ5/cWa8yZry/28x5frzb/PZqp4PL3IfFQ154BaX8ja4Q
+untrusted comment: st2projects-code-signing public key
+RWRHYnSHkgPLIU5lsrxJHHv/I3/fOWAGfyr5Amvlo0npeok5RTR2pMM
 ```
 
 You can verify the checksums using

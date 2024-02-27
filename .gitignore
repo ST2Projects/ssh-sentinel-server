@@ -173,3 +173,4 @@ resources
 dist/
 ssh-sentinel-server
 prod-http-tests.http
+.githubtoken

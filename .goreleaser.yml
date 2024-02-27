@@ -1,5 +1,7 @@
 # This is an example .goreleaser.yml file with some sane defaults.
 # Make sure to check the documentation at http://goreleaser.com
+env_files:
+  github_token: .githubtoken
 before:
   hooks:
     # You may remove this if you don't use go modules.
@@ -34,7 +36,7 @@ signs:
   - id: signify
     signature: ${artifact}.sig
     cmd: signify
-    args: ["-S", "-s", "{{ .Env.HOME }}/.signify/ssh-sentinel.sec", "-m", "${artifact}", "-x", "${artifact}.sig"]
+    args: ["-S", "-s", "{{ .Env.HOME }}/.signify/st2projects-code-signing.sec", "-m", "${artifact}", "-x", "${artifact}.sig"]
     artifacts: checksum
 release:
   prerelease: auto
