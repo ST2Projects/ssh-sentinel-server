@@ -1,5 +1,7 @@
 # ssh-sentinel-server
 
+[![CodeQL](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/codeql-analysis.yml) [![Go](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/go.yml/badge.svg)](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/go.yml)
+
 A simple to use and deploy SSH CA server.
 
 **This is a Work In Progress** - the project is in its early days. It is functional, and I'm using it for my own hosts, **but** you use it at your own risk
