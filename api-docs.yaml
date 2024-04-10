@@ -24,12 +24,13 @@ definitions:
         description: The client username ( with the service )
       api_key:
         type: string
-        pattern: [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}
+        pattern: "[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}"
         example: c7ce5f4a-ae6b-4232-a458-62855d0b9f29
         description: The API Key provided by the service at registration
       principals:
         type: array
         description: A list of usernames to be included with the certificate. Usernames are with the target services
+        example: user1
       key:
         type: string
         description: The public key to sign
