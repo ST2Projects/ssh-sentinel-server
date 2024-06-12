@@ -12,7 +12,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/st2projects/ssh-sentinel-core v1.0.0
 	golang.org/x/crypto v0.24.0
-	golang.org/x/net v0.25.0
+	golang.org/x/net v0.26.0
 	gorm.io/driver/sqlite v1.5.6
 	gorm.io/gorm v1.25.10
 )
