@@ -30,10 +30,20 @@ definitions:
       principals:
         type: array
         description: A list of usernames to be included with the certificate. Usernames are with the target services
-        example: user1
+        example:
+          - user1
       key:
         type: string
         description: The public key to sign
+      extensions:
+        type: array
+        description: An array of required extensions
+        example:
+          - permit-pty
+          - permit_user_rc
+        default:
+          - permit-pty
+          - permit_user_rc
   KeySignResponse:
     type: object
     description: A signing response

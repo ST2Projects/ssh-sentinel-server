@@ -43,7 +43,7 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 		panic(helper.NewError("Failed to parse key: [%s]", err))
 	}
 
-	cert, err := MakeSSHCertificate(pubKeyDisk, signRequest.Principals)
+	cert, err := MakeSSHCertificate(pubKeyDisk, signRequest.Principals, signRequest.Extensions)
 
 	if err != nil {
 		panic(helper.NewError("Failed to sign cert: [%s]", err))
@@ -61,17 +61,21 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
 func MarshallSigningRequest(requestReader io.Reader) (model.KeySignRequest, error) {
 
-	body, err := ioutil.ReadAll(requestReader)
+	body, err := io.ReadAll(requestReader)
 	signRequest := model.KeySignRequest{}
 
 	if err == nil {
 		json.Unmarshal(body, &signRequest)
 	}
 
+	if len(signRequest.Extensions) == 0 {
+		signRequest.Extensions = append(signRequest.Extensions, "permit_pty", "permit_user_rc")
+	}
+
 	return signRequest, err
 }
 
-func MakeSSHCertificate(pubKey ssh.PublicKey, principals []string) (*ssh.Certificate, error) {
+func MakeSSHCertificate(pubKey ssh.PublicKey, principals []string, extensions []model.Extension) (*ssh.Certificate, error) {
 	caPriv := GetCAKey()
 
 	validBefore, validAfter := ComputeValidity()
@@ -87,12 +91,16 @@ func MakeSSHCertificate(pubKey ssh.PublicKey, principals []string) (*ssh.Certifi
 			CriticalOptions: map[string]string{
 				"source-address": "0.0.0.0/0",
 			},
-			Extensions: map[string]string{
-				"permit-pty":     "",
-				"permit-user-rc": "",
-			},
 		},
 	}
+
+	mappedExtensions := map[string]string{}
+
+	for _, extension := range extensions {
+		mappedExtensions[string(extension)] = ""
+	}
+
+	cert.Extensions = mappedExtensions
 
 	err := cert.SignCert(rand.Reader, caPriv)
 
@@ -159,9 +167,15 @@ func Serve(httpConfig *cmdModel.HTTPConfig) {
 	cfg.CacheDir = "./resources"
 	cfg.Domains = configuredTls.CertDomains
 	cfg.SSLEmail = configuredTls.CertEmail
-	cfg.DNSProvider = configuredTls.DNSProvider
-	cfg.HTTPAddress = ""
-	cfg.TLSAddress = ""
+
+	if configuredTls.DNSProvider != "" {
+		cfg.DNSProvider = configuredTls.DNSProvider
+	}
+
+	if configuredTls.Local {
+		cfg.HTTPAddress = "localhost"
+		cfg.TLSAddress = "localhost"
+	}
 
 	cfg.WillRenewCertificate = func() {
 		cancel()
