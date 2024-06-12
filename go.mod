@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/foomo/simplecert v1.8.7
-	github.com/foomo/tlsconfig v0.0.0-20180418120404-b67861b076c9
+	github.com/foomo/tlsconfig v1.0.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/justinas/alice v1.2.0
