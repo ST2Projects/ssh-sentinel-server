@@ -1,0 +1,16 @@
+
+### testNormalRequest
+POST https://localhost:443/ssh
+Content-Type: application/json
+
+{"username": "test", "api_key": "fae378b9-a53b-4115-bc68-5d2778436108", "principals": ["test"], "extensions": ["permit-pty"], "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICazCPU7VgxhgZWNXr2bA2nErkFyXRz4IMddcZLDN7MU xxx@aaa"}
+
+> {%
+ // Response handler
+ client.test("Request was successful", function () {
+     client.assert(response.status === 200, "Status was not 200");
+     client.assert(response.body.signedKey !== "", "signed key was empty!");
+     // let responseBody = JSON.parse(response.body.toString());
+     // client.assert(responseBody.signedKey != null, "Signed key was empty / null");
+ });
+ %}
