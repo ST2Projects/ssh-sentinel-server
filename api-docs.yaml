@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   title: SSH-Sentinel
   description: Sentinel API
-  version: 1.1.0
+  version: 0.0.7
 host: "localhost:443"
 consumes:
   - application/json
