@@ -11,7 +11,7 @@ release:
 	$(shell goreleaser release --clean)
 
 release-dry:
-	$(shell goreleaser release --skip=publish)
+	$(shell goreleaser release --skip=publish --clean)
 
 snapshot:
 	$(shell goreleaser release --snapshot --skip=publish --clean)
