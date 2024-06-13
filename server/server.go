@@ -38,13 +38,11 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
 	// ssh.ParseAuthorizedKey expects the key to be in the "disk" format
 	pubKeyDisk, _, _, _, err := ssh.ParseAuthorizedKey([]byte(signRequest.Key))
-
 	if err != nil {
 		panic(helper.NewError("Failed to parse key: [%s]", err))
 	}
 
-	cert, err := MakeSSHCertificate(pubKeyDisk, signRequest.Principals)
-
+	cert, err := MakeSSHCertificate(pubKeyDisk, signRequest.Username, signRequest.Principals, signRequest.Extensions)
 	if err != nil {
 		panic(helper.NewError("Failed to sign cert: [%s]", err))
 	}
@@ -55,13 +53,16 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 	response.SignedKey = string(signedCert)
 
 	writer.WriteHeader(http.StatusOK)
-	responseEncoder.Encode(response)
+	err = responseEncoder.Encode(response)
 
+	if err != nil {
+		panic(helper.NewError("Failed to encode response: [%s]", err))
+	}
 }
 
 func MarshallSigningRequest(requestReader io.Reader) (model.KeySignRequest, error) {
 
-	body, err := ioutil.ReadAll(requestReader)
+	body, err := io.ReadAll(requestReader)
 	signRequest := model.KeySignRequest{}
 
 	if err == nil {
@@ -71,10 +72,10 @@ func MarshallSigningRequest(requestReader io.Reader) (model.KeySignRequest, erro
 	return signRequest, err
 }
 
-func MakeSSHCertificate(pubKey ssh.PublicKey, principals []string) (*ssh.Certificate, error) {
-	caPriv := GetCAKey()
+func MakeSSHCertificate(pubKey ssh.PublicKey, username string, principals []string, extensions []model.Extension) (*ssh.Certificate, error) {
+	caPriv := getCAKey()
 
-	validBefore, validAfter := ComputeValidity()
+	validBefore, validAfter := computeValidity()
 
 	cert := &ssh.Certificate{
 		Key:             pubKey,
@@ -87,19 +88,37 @@ func MakeSSHCertificate(pubKey ssh.PublicKey, principals []string) (*ssh.Certifi
 			CriticalOptions: map[string]string{
 				"source-address": "0.0.0.0/0",
 			},
-			Extensions: map[string]string{
-				"permit-pty":     "",
-				"permit-user-rc": "",
-			},
 		},
 	}
+
+	cert.Extensions = getExtensionsAsMap(extensions, username)
 
 	err := cert.SignCert(rand.Reader, caPriv)
 
 	return cert, err
 }
 
-func ComputeValidity() (uint64, uint64) {
+func getExtensionsAsMap(extensions []model.Extension, username string) map[string]string {
+	if extensions == nil || len(extensions) == 0 {
+		log.Warnf("No extensions found in request for user [%s]. Using default extensions %s", username, config.Config.DefaultExtensions)
+		return mapExtensions(config.Config.DefaultExtensions)
+	} else {
+		log.Infof("User [%s] is adding %s extensions", username, extensions)
+		return mapExtensions(extensions)
+	}
+}
+
+func mapExtensions(extensions []model.Extension) map[string]string {
+	mappedExtensions := map[string]string{}
+
+	for _, extension := range extensions {
+		mappedExtensions[string(extension)] = ""
+	}
+
+	return mappedExtensions
+}
+
+func computeValidity() (uint64, uint64) {
 	now := time.Now()
 	validBefore := uint64(now.Unix())
 	maxDuration, _ := time.ParseDuration(config.Config.MaxValidTime)
@@ -108,7 +127,7 @@ func ComputeValidity() (uint64, uint64) {
 	return validAfter, validBefore
 }
 
-func GetCAKey() (caPriv ssh.Signer) {
+func getCAKey() (caPriv ssh.Signer) {
 
 	keyFile := config.Config.CAPrivateKey
 	privKeyFile, err := ioutil.ReadFile(keyFile)
@@ -159,9 +178,15 @@ func Serve(httpConfig *cmdModel.HTTPConfig) {
 	cfg.CacheDir = "./resources"
 	cfg.Domains = configuredTls.CertDomains
 	cfg.SSLEmail = configuredTls.CertEmail
-	cfg.DNSProvider = configuredTls.DNSProvider
-	cfg.HTTPAddress = ""
-	cfg.TLSAddress = ""
+
+	if configuredTls.DNSProvider != "" {
+		cfg.DNSProvider = configuredTls.DNSProvider
+	}
+
+	if configuredTls.Local {
+		cfg.HTTPAddress = "localhost"
+		cfg.TLSAddress = "localhost"
+	}
 
 	cfg.WillRenewCertificate = func() {
 		cancel()
