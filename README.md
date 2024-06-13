@@ -1,6 +1,6 @@
 # ssh-sentinel-server
 
-[![CodeQL](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/codeql-analysis.yml) [![Go](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/go.yml/badge.svg)](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/go.yml)
+[![CodeQL](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/codeql-analysis.yml) [![Go](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/go.yml/badge.svg)](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/go.yml) [![Dependency review](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/dependency-review.yml/badge.svg)](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/dependency-review.yml)
 
 A simple to use and deploy SSH CA server.
 
