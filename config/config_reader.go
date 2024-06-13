@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	log "github.com/sirupsen/logrus"
+	"github.com/st2projects/ssh-sentinel-core/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"io/ioutil"
 	"os"
 )
 
@@ -16,12 +16,13 @@ const (
 )
 
 type Configtype struct {
-	DevMode      bool    `json:"devMode"`
-	CAPrivateKey string  `json:"CAPrivateKey"`
-	CAPublicKey  string  `json:"CAPublicKey"`
-	MaxValidTime string  `json:"MaxValidTime"`
-	Db           DbType  `json:"db"`
-	TLS          TLSType `json:"tls"`
+	DevMode           bool              `json:"devMode"`
+	CAPrivateKey      string            `json:"CAPrivateKey"`
+	CAPublicKey       string            `json:"CAPublicKey"`
+	MaxValidTime      string            `json:"maxValidTime"`
+	DefaultExtensions []model.Extension `json:"defaultExtensions"`
+	Db                DbType            `json:"db"`
+	TLS               TLSType           `json:"tls"`
 }
 
 type DialectType string
@@ -71,8 +72,8 @@ func MakeConfig(configFile string, devMode bool) {
 	if _, err := os.Stat(configFile); errors.Is(err, os.ErrNotExist) {
 		panic("config file " + configFile + " does not exist")
 	}
-	configString, err := ioutil.ReadFile(configFile)
 
+	configString, err := os.ReadFile(configFile)
 	if err != nil {
 		panic(err)
 	}

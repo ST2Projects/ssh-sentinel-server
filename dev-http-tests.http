@@ -3,7 +3,7 @@
 POST https://localhost:443/ssh
 Content-Type: application/json
 
-{"username": "ben", "api_key": "99cb4e89-c397-4060-a17e-e5284e2f8b54", "principals": ["ben"], "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICazCPU7VgxhgZWNXr2bA2nErkFyXRz4IMddcZLDN7MU xxx@aaa"}
+{"username": "test", "api_key": "fae378b9-a53b-4115-bc68-5d2778436108", "principals": ["test"], "extensions": ["permit-pty"], "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICazCPU7VgxhgZWNXr2bA2nErkFyXRz4IMddcZLDN7MU xxx@aaa"}
 
 > {%
  // Response handler

@@ -2,8 +2,8 @@ swagger: "2.0"
 info:
   title: SSH-Sentinel
   description: Sentinel API
-  version: 1.0.0
-host: localhost:443
+  version: 1.1.0
+host: "localhost:443"
 consumes:
   - application/json
 produces:
@@ -44,6 +44,11 @@ definitions:
         default:
           - permit-pty
           - permit_user_rc
+    required:
+      - username
+      - api_key
+      - principals
+      - key
   KeySignResponse:
     type: object
     description: A signing response
@@ -71,8 +76,6 @@ definitions:
     type: string
   CAPubKey:
     type: string
-
-
 
 paths:
   /ping:

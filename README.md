@@ -42,7 +42,8 @@ Configuration is defined in the `config.json`. Properties are explained below. F
 
 - `CAPrivateKey` - Name of the CA private key. The key must be unencrypted - a future enhancement will allow encrypted keys
 - `CAPublicKey` - Name of the CA public key.
-- `MaxValidTime` - Maximum lifespan of signed keys, in the normal [go duration format](https://pkg.go.dev/time#ParseDuration)
+- `maxValidTime` - Maximum lifespan of signed keys, in the normal [go duration format](https://pkg.go.dev/time#ParseDuration)
+- `defaultExtensions` - A list of extensions to add to a key if the request does not contain any
 - `db.dialect` - Must be `sqlite3`. A future release will add support for other DBs
 - `db.username` - Username of the DB user
 - `db.password` - Password of the DB user
