@@ -1,7 +1,11 @@
 {
   "CAPrivateKey": "CA",
   "CAPublicKey": "CA.pub",
-  "MaxValidTime": "30m",
+  "maxValidTime": "30m",
+  "defaultExtensions": [
+    "permit-pty",
+    "permit-user-rc"
+  ],
   "db": {
     "dialect": "sqlite3",
     "username": "sentinel",

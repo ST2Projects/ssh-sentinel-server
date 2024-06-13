@@ -10,7 +10,7 @@ require (
 	github.com/justinas/alice v1.2.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
-	github.com/st2projects/ssh-sentinel-core v1.0.0
+	github.com/st2projects/ssh-sentinel-core v1.0.1
 	golang.org/x/crypto v0.24.0
 	golang.org/x/net v0.26.0
 	gorm.io/driver/sqlite v1.5.6

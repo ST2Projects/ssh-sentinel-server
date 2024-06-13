@@ -2,8 +2,8 @@ swagger: "2.0"
 info:
   title: SSH-Sentinel
   description: Sentinel API
-  version: 1.0.0
-host: localhost:443
+  version: 0.0.7
+host: "localhost:443"
 consumes:
   - application/json
 produces:
@@ -24,15 +24,31 @@ definitions:
         description: The client username ( with the service )
       api_key:
         type: string
-        pattern: [a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}
+        pattern: "[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}"
         example: c7ce5f4a-ae6b-4232-a458-62855d0b9f29
         description: The API Key provided by the service at registration
       principals:
         type: array
         description: A list of usernames to be included with the certificate. Usernames are with the target services
+        example:
+          - user1
       key:
         type: string
         description: The public key to sign
+      extensions:
+        type: array
+        description: An array of required extensions
+        example:
+          - permit-pty
+          - permit_user_rc
+        default:
+          - permit-pty
+          - permit_user_rc
+    required:
+      - username
+      - api_key
+      - principals
+      - key
   KeySignResponse:
     type: object
     description: A signing response
@@ -60,8 +76,6 @@ definitions:
     type: string
   CAPubKey:
     type: string
-
-
 
 paths:
   /ping:
