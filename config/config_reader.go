@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-type Configtype struct {
+type ConfigType struct {
 	DevMode           bool              `json:"devMode"`
 	CAPrivateKey      string            `json:"CAPrivateKey"`
 	CAPublicKey       string            `json:"CAPublicKey"`
@@ -51,7 +51,7 @@ type DbType struct {
 
 type DbDriver string
 
-var Config *Configtype
+var Config *ConfigType
 
 func MakeConfig(configFile string, devMode bool) {
 	if _, err := os.Stat(configFile); errors.Is(err, os.ErrNotExist) {
@@ -63,7 +63,7 @@ func MakeConfig(configFile string, devMode bool) {
 		panic(err)
 	}
 
-	appConfig := Configtype{}
+	appConfig := ConfigType{}
 
 	json.Unmarshal(configString, &appConfig)
 	appConfig.DevMode = devMode

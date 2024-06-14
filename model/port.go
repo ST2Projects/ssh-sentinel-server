@@ -7,7 +7,7 @@ type HTTPConfig struct {
 
 func (h HTTPConfig) Default() *HTTPConfig {
 	return &HTTPConfig{
-		Port:     80,
+		Port:     8080,
 		ListenOn: "0.0.0.0",
 	}
 }
