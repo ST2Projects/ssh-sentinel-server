@@ -10,7 +10,6 @@ var devMode bool
 
 var httpConfig = model.HTTPConfig{}.Default()
 
-// serveCmd represents the serve command
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the CA server",

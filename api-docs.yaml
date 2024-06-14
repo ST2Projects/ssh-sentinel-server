@@ -3,7 +3,7 @@ info:
   title: SSH-Sentinel
   description: Sentinel API
   version: 0.0.7
-host: "localhost:443"
+host: "http://localhost:8081"
 consumes:
   - application/json
 produces:
