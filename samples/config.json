@@ -12,15 +12,5 @@
     "password": "sentinel",
     "connection": "resources/sentinel.db",
     "dbName": "sentinel"
-  },
-  "tls": {
-    "local": true,
-    "certDir": "./resources",
-    "certDomains": [
-      "localhost"
-    ],
-    "certEmail": "",
-    "dnsProvider": "",
-    "dnsApiToken": ""
   }
 }
