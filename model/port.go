@@ -1,13 +1,13 @@
 package model
 
 type HTTPConfig struct {
-	HttpPort  int
-	HttpsPort int
+	Port     int
+	ListenOn string
 }
 
 func (h HTTPConfig) Default() *HTTPConfig {
 	return &HTTPConfig{
-		HttpPort:  80,
-		HttpsPort: 443,
+		Port:     80,
+		ListenOn: "0.0.0.0",
 	}
 }

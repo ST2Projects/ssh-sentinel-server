@@ -3,9 +3,8 @@ package server
 import (
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/foomo/simplecert"
-	"github.com/foomo/tlsconfig"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	log "github.com/sirupsen/logrus"
@@ -18,7 +17,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -148,75 +146,21 @@ func getCAKey() (caPriv ssh.Signer) {
 func Serve(httpConfig *cmdModel.HTTPConfig) {
 
 	var (
-		certReloader *simplecert.CertReloader
-		err          error
-		numRenews    int
-		ctx, cancel  = context.WithCancel(context.Background())
-
-		// init strict tlsConfig (this will enforce the use of modern TLS configurations)
-		// you could use a less strict configuration if you have a customer facing web application that has visitors with old browsers
-		tlsConf = tlsconfig.NewServerTLSConfig(tlsconfig.TLSModeServerStrict)
+		ctx, _ = context.WithCancel(context.Background())
 
 		// a simple constructor for a http.Server with our Handler
 		makeServer = func() *http.Server {
 			return &http.Server{
-				Addr:      fmt.Sprintf("0.0.0.0:%d", httpConfig.HttpsPort),
-				Handler:   makeRouter(),
-				TLSConfig: tlsConf,
+				Addr:    fmt.Sprintf("0.0.0.0:%d", httpConfig.Port),
+				Handler: makeRouter(),
 			}
 		}
 
 		// init server
 		srv = makeServer()
-
-		// init simplecert configuration
-		cfg = simplecert.Default
 	)
 
-	configuredTls := config.GetTLSConfig()
-	cfg.Local = configuredTls.Local
-	cfg.CacheDir = "./resources"
-	cfg.Domains = configuredTls.CertDomains
-	cfg.SSLEmail = configuredTls.CertEmail
-
-	if configuredTls.DNSProvider != "" {
-		cfg.DNSProvider = configuredTls.DNSProvider
-	}
-
-	if configuredTls.Local {
-		cfg.HTTPAddress = "localhost"
-		cfg.TLSAddress = "localhost"
-	}
-
-	cfg.WillRenewCertificate = func() {
-		cancel()
-	}
-
-	cfg.DidRenewCertificate = func() {
-		numRenews++
-		// Restart the server
-		ctx, cancel = context.WithCancel(context.Background())
-		srv = makeServer()
-
-		// Force reload the cert
-		certReloader.ReloadNow()
-
-		go serve(ctx, srv)
-	}
-
-	certReloader, err = simplecert.Init(cfg, func() {
-		os.Exit(0)
-	})
-
-	if err != nil {
-		log.Fatalf("Simple cert init failed: %s\n", err)
-	}
-
-	// Redirect 80 -> 443
-	go http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", httpConfig.HttpPort), http.HandlerFunc(simplecert.Redirect))
-
-	tlsConf.GetCertificate = certReloader.GetCertificateFunc()
-	log.Infof("Serving at https://%s:%d", configuredTls.CertDomains[0], httpConfig.HttpsPort)
+	log.Infof("Serving at http://%s:%d", httpConfig.ListenOn, httpConfig.Port)
 	serve(ctx, srv)
 	<-make(chan bool)
 }
@@ -236,7 +180,7 @@ func makeRouter() *mux.Router {
 
 func serve(ctx context.Context, srv *http.Server) {
 	go func() {
-		if err := srv.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("listen %s\n", err)
 		}
 	}()
@@ -251,7 +195,7 @@ func serve(ctx context.Context, srv *http.Server) {
 	}()
 
 	err := srv.Shutdown(ctxShutdown)
-	if err == http.ErrServerClosed {
+	if errors.Is(err, http.ErrServerClosed) {
 		log.Info("Server stopped correctly")
 	} else {
 		log.Errorf("Error when stopping server %s\n", err)

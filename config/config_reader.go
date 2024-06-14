@@ -10,11 +10,6 @@ import (
 	"os"
 )
 
-const (
-	cfEmailEnvName  = "CLOUDFLARE_EMAIL"
-	cfAPIKeyEnvName = "CLOUDFLARE_DNS_API_TOKEN"
-)
-
 type Configtype struct {
 	DevMode           bool              `json:"devMode"`
 	CAPrivateKey      string            `json:"CAPrivateKey"`
@@ -22,7 +17,6 @@ type Configtype struct {
 	MaxValidTime      string            `json:"maxValidTime"`
 	DefaultExtensions []model.Extension `json:"defaultExtensions"`
 	Db                DbType            `json:"db"`
-	TLS               TLSType           `json:"tls"`
 }
 
 type DialectType string
@@ -55,15 +49,6 @@ type DbType struct {
 	DBName     string      `json:"dbName"`
 }
 
-type TLSType struct {
-	Local       bool     `json:"local"`
-	CertDir     string   `json:"certDir"`
-	CertDomains []string `json:"certDomains"`
-	CertEmail   string   `json:"certEmail"`
-	DNSProvider string   `json:"dnsProvider"`
-	DNSAPIToken string   `json:"dnsApiToken"`
-}
-
 type DbDriver string
 
 var Config *Configtype
@@ -85,20 +70,8 @@ func MakeConfig(configFile string, devMode bool) {
 
 	Config = &appConfig
 
-	if !Config.TLS.Local {
-		setEnvVars()
-	}
-}
-
-func setEnvVars() {
-	os.Setenv(cfEmailEnvName, Config.TLS.CertEmail)
-	os.Setenv(cfAPIKeyEnvName, Config.TLS.DNSAPIToken)
 }
 
 func GetDBConfig() DbType {
 	return Config.Db
-}
-
-func GetTLSConfig() TLSType {
-	return Config.TLS
 }
