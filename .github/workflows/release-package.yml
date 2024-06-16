@@ -9,8 +9,11 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
+  publish-gpr:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Setup Go
@@ -21,14 +24,6 @@ jobs:
         run: go build -v ./...
       - name: Test
         run: go test -v ./...
-
-  publish-gpr:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-    steps:
       - name: Setup BuildX
         uses: docker/setup-buildx-action@v3
       - name: Login to registy ${{ env.REGISTRY }}
