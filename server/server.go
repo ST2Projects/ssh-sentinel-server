@@ -143,6 +143,19 @@ func getCAKey() (caPriv ssh.Signer) {
 	return privKey
 }
 
+func makeRouter() *mux.Router {
+	commonHandlers := alice.New(LoggingHandler, ErrorHandler)
+	authHandlers := commonHandlers.Append(AuthenticationHandler)
+
+	router := mux.NewRouter()
+
+	router.Handle("/", commonHandlers.ThenFunc(PingHandler))
+	router.Handle("/ping", commonHandlers.ThenFunc(PingHandler))
+	router.Handle("/capubkey", commonHandlers.ThenFunc(CAPubKeyHandler))
+	router.Handle("/ssh", authHandlers.ThenFunc(KeySignHandler))
+	return router
+}
+
 func Serve(httpConfig *cmdModel.HTTPConfig) {
 
 	var (
@@ -163,19 +176,6 @@ func Serve(httpConfig *cmdModel.HTTPConfig) {
 	log.Infof("Serving at http://%s:%d", httpConfig.ListenOn, httpConfig.Port)
 	serve(ctx, srv)
 	<-make(chan bool)
-}
-
-func makeRouter() *mux.Router {
-	commonHandlers := alice.New(LoggingHandler, ErrorHandler)
-	authHandlers := commonHandlers.Append(AuthenticationHandler)
-
-	router := mux.NewRouter()
-
-	router.Handle("/", commonHandlers.ThenFunc(PingHandler))
-	router.Handle("/ping", commonHandlers.ThenFunc(PingHandler))
-	router.Handle("/capubkey", commonHandlers.ThenFunc(CAPubKeyHandler))
-	router.Handle("/ssh", authHandlers.ThenFunc(KeySignHandler))
-	return router
 }
 
 func serve(ctx context.Context, srv *http.Server) {
