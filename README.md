@@ -70,7 +70,7 @@ Configuration is defined in the `config.json`. Properties are explained below. F
 
 ### Generate a CA
 
-You can generate a SSH CA with `ssh-keygen`. I suggest using ECDSA keys as they are smaller ( and (RSA sucks)[https://blog.trailofbits.com/2019/07/08/fuck-rsa] ) but this is not a requirement.
+You can generate a SSH CA with `ssh-keygen`. I suggest using ECDSA keys as they are smaller ( and [RSA sucks](https://blog.trailofbits.com/2019/07/08/fuck-rsa) ) but this is not a requirement.
 
 ```shell
 ssh-keygen -t ed25519 -f sentinel-ca -C sentinel-CA
