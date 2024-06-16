@@ -1,6 +1,6 @@
 # ssh-sentinel-server
 
-[![CodeQL](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/codeql-analysis.yml) [![Go](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/go.yml/badge.svg)](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/go.yml) [![Dependency review](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/dependency-review.yml/badge.svg)](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/dependency-review.yml)
+[![Go](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/go.yml/badge.svg)](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/go.yml) [![Dependency review](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/dependency-review.yml/badge.svg)](https://github.com/ST2Projects/ssh-sentinel-server/actions/workflows/dependency-review.yml)
 
 A simple to use and deploy SSH CA server.
 
@@ -17,6 +17,8 @@ requirements. This projects aims to:
 I'm also using this project to learn go, so if you come across it and notice something dumb please let me know by opening an issue!
 
 ## Installation
+
+### Binary
 
 The release archive contains the binary `ssh-sentinel-server` and a samples directory containing a config template and a systemd service file.
 
@@ -36,6 +38,22 @@ systemctl daemon-reload
 
 I'm working on an ansible role to do this and will update the readme when complete
 
+### Docker
+
+Images are published to the (GitHub Container Registry)[https://github.com/ST2Projects/ssh-sentinel-server/pkgs/container/ssh-sentinel-server]. You can pull the latest version of the image
+
+```shell
+docker pull ghcr.io/st2projects/ssh-sentinel-server:latest
+```
+
+You can then start the service using
+
+```shell
+docker run -it --name ssh-sentinel -v ./ssh-sentinel-resources:/resources -p 8080:8080 ghcr.io/st2projects/ssh-sentinel-server
+```
+
+Where `ssh-sentinel-resources` is the location of your `config.json` file. When running with sqlite this is also where the DB file will be created.
+
 ### Configuration
 
 Configuration is defined in the `config.json`. Properties are explained below. Full paths must be provided
@@ -49,16 +67,10 @@ Configuration is defined in the `config.json`. Properties are explained below. F
 - `db.password` - Password of the DB user
 - `db.connection` - Connection URL for the DB. For sqlite3 this is a file path
 - `db.dbName` - Name of the DB
-- `tls.local` - When set to `true` the server will generate a local TLS certificate. When `false` the server will generate a Let's Encrypt cert
-- `tls.certDir` - Directory in which the generated certificate will be generated
-- `tls.certDomains` - A list of domains to be included in the certificate.
-- `tls.certEmail` - Needed when generating a certificate with let's encrypt
-- `tls.dnsProvider` - Only `cloudflare` is supported at the moment. A future release will open up support for other providers
-- `tls.dnsAPIToken` - The zone API token from cloudflare
 
 ### Generate a CA
 
-You can generate a SSH CA with `ssh-keygen`. I suggest using ECDSA keys as they are smaller but this is not a requirement.
+You can generate a SSH CA with `ssh-keygen`. I suggest using ECDSA keys as they are smaller ( and (RSA sucks)[https://blog.trailofbits.com/2019/07/08/fuck-rsa] ) but this is not a requirement.
 
 ```shell
 ssh-keygen -t ed25519 -f sentinel-ca -C sentinel-CA
@@ -92,7 +104,7 @@ So to add a user
 ./ssh-sentinel-server admin -c config.json -C -n test -P test1 test2 -U test
 ```
 
-Not that the username is the user associated with this service. The principals list the allowed usernames on the server you will ssh to.
+Note that the username is the user associated with this service. The principals list the allowed usernames on the server you will ssh to.
 
 ## Usage
 
@@ -106,13 +118,13 @@ The server stands up as a restful HTTP/S service. You can post requests via curl
 
 Servers require some configuration to use the CA. In short:
 
-- Copy the CA **public key** to the server and save it in `/etc/ssh/ca.pub`
+- Copy the CA **public key** to the server and save it in `/etc/ssh/ca.pub` , you can always grab this from `https://auth.your.domain/com/capubkey`
 - Edit `/etc/ssh/sshd_config` and add `TrustedUserCAKeys /etc/ssh/ca.pub`
 - Restart SSHD `service sshd restart`
 
 The easiest way to do this across an estate is with ansible. There is an [ansible galaxy role available](https://galaxy.ansible.com/neo1908/install_ssh_ca)
 
-Create a new playbook called `deploy-sentinel-ca.yml` with something like 
+Create a new playbook called `deploy-sentinel-ca.yml` with something like
 
 ```yaml
 - hosts: sentinel_managed
@@ -142,8 +154,3 @@ You can verify the checksums using
 ```shell
 signify -V -p path/to/public/key.pub -m checksums.txt
 ```
-
-## Development Dependencies
-
-- lego
-- mkcert
