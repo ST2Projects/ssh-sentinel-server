@@ -1,23 +1,50 @@
 env_files:
   github_token: .githubtoken
+
 before:
   hooks:
     - go mod tidy
+
 builds:
-  - goarch:
+  - id: ssh-sentinel-server
+    main: ./cmd/ssh-sentinel-server/main.go
+    binary: ssh-sentinel-server
+    goarch:
+      - amd64
+    goos:
+      - linux
+  - id: ssh-sentinel-client
+    main: ./cmd/ssh-sentinel-client/main.go
+    binary: ssh-sentinel-client
+    goarch:
       - amd64
     goos:
       - linux
 
 archives:
-  - files:
+  - id: ssh-sentinel-server
+    builds:
+      - ssh-sentinel-server
+    files:
       - samples
       - README.md
       - LICENSE
+    name_template: &name_template
+      '{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}'
+  - id: ssh-sentinel-client
+    builds:
+      - ssh-sentinel-client
+    files:
+      - README.md
+      - LICENSE
+    name_template: *name_template
+
 checksum:
   name_template: 'checksums.txt'
+
 snapshot:
   name_template: "{{ .Tag }}-next"
+
 changelog:
   sort: asc
   filters:

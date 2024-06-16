@@ -8,10 +8,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	log "github.com/sirupsen/logrus"
-	"github.com/st2projects/ssh-sentinel-core/model"
 	"github.com/st2projects/ssh-sentinel-server/config"
 	"github.com/st2projects/ssh-sentinel-server/helper"
 	cmdModel "github.com/st2projects/ssh-sentinel-server/model"
+	"github.com/st2projects/ssh-sentinel-server/model/api"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/context"
 	"io"
@@ -47,7 +47,7 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 
 	signedCert := ssh.MarshalAuthorizedKey(cert)
 
-	var response = model.NewKeySignResponse(true, "")
+	var response = api.NewKeySignResponse(true, "")
 	response.SignedKey = string(signedCert)
 
 	writer.WriteHeader(http.StatusOK)
@@ -58,10 +58,10 @@ func KeySignHandler(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func MarshallSigningRequest(requestReader io.Reader) (model.KeySignRequest, error) {
+func MarshallSigningRequest(requestReader io.Reader) (api.KeySignRequest, error) {
 
 	body, err := io.ReadAll(requestReader)
-	signRequest := model.KeySignRequest{}
+	signRequest := api.KeySignRequest{}
 
 	if err == nil {
 		json.Unmarshal(body, &signRequest)
@@ -70,7 +70,7 @@ func MarshallSigningRequest(requestReader io.Reader) (model.KeySignRequest, erro
 	return signRequest, err
 }
 
-func MakeSSHCertificate(pubKey ssh.PublicKey, username string, principals []string, extensions []model.Extension) (*ssh.Certificate, error) {
+func MakeSSHCertificate(pubKey ssh.PublicKey, username string, principals []string, extensions []api.Extension) (*ssh.Certificate, error) {
 	caPriv := getCAKey()
 
 	validBefore, validAfter := computeValidity()
@@ -96,7 +96,7 @@ func MakeSSHCertificate(pubKey ssh.PublicKey, username string, principals []stri
 	return cert, err
 }
 
-func getExtensionsAsMap(extensions []model.Extension, username string) map[string]string {
+func getExtensionsAsMap(extensions []api.Extension, username string) map[string]string {
 	if extensions == nil || len(extensions) == 0 {
 		log.Warnf("No extensions found in request for user [%s]. Using default extensions %s", username, config.Config.DefaultExtensions)
 		return mapExtensions(config.Config.DefaultExtensions)
@@ -106,7 +106,7 @@ func getExtensionsAsMap(extensions []model.Extension, username string) map[strin
 	}
 }
 
-func mapExtensions(extensions []model.Extension) map[string]string {
+func mapExtensions(extensions []api.Extension) map[string]string {
 	mappedExtensions := map[string]string{}
 
 	for _, extension := range extensions {

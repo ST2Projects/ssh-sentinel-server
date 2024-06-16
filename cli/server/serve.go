@@ -1,8 +1,7 @@
-package cmd
+package servercli
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/st2projects/ssh-sentinel-server/app"
 	"github.com/st2projects/ssh-sentinel-server/model"
 )
 
@@ -14,7 +13,7 @@ var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the CA server",
 	Run: func(cmd *cobra.Command, args []string) {
-		app.InitialiseApp(configPath, devMode, httpConfig)
+		InitialiseApp(configPath, devMode, httpConfig)
 	},
 }
 

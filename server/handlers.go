@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"github.com/st2projects/ssh-sentinel-core/model"
 	"github.com/st2projects/ssh-sentinel-server/config"
 	"github.com/st2projects/ssh-sentinel-server/crypto"
 	"github.com/st2projects/ssh-sentinel-server/helper"
+	"github.com/st2projects/ssh-sentinel-server/model/api"
 	"github.com/st2projects/ssh-sentinel-server/sql"
 	"io"
 	"net/http"
@@ -87,7 +87,7 @@ func ErrorHandler(next http.Handler) http.Handler {
 			if err := recover(); err != nil {
 				// There is surely a better way to do this
 				errorMsg := fmt.Sprintf("%s", err)
-				response := model.NewKeySignResponse(false, errorMsg)
+				response := api.NewKeySignResponse(false, errorMsg)
 				json.NewEncoder(w).Encode(response)
 			}
 		}()

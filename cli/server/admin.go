@@ -1,8 +1,7 @@
-package cmd
+package servercli
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/st2projects/ssh-sentinel-server/app"
 )
 
 var create bool
@@ -16,7 +15,7 @@ var adminCmd = &cobra.Command{
 	Short: "Create / delete users",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		app.RunAdmin(configPath, create, name, username, principals)
+		RunAdmin(configPath, create, name, username, principals)
 	},
 }
 

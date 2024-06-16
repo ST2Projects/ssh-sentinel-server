@@ -4,19 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	log "github.com/sirupsen/logrus"
-	"github.com/st2projects/ssh-sentinel-core/model"
+	"github.com/st2projects/ssh-sentinel-server/model/api"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
 )
 
 type ConfigType struct {
-	DevMode           bool              `json:"devMode"`
-	CAPrivateKey      string            `json:"CAPrivateKey"`
-	CAPublicKey       string            `json:"CAPublicKey"`
-	MaxValidTime      string            `json:"maxValidTime"`
-	DefaultExtensions []model.Extension `json:"defaultExtensions"`
-	Db                DbType            `json:"db"`
+	DevMode           bool            `json:"devMode"`
+	CAPrivateKey      string          `json:"CAPrivateKey"`
+	CAPublicKey       string          `json:"CAPublicKey"`
+	MaxValidTime      string          `json:"maxValidTime"`
+	DefaultExtensions []api.Extension `json:"defaultExtensions"`
+	Db                DbType          `json:"db"`
 }
 
 type DialectType string
