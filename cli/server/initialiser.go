@@ -1,4 +1,4 @@
-package cli
+package servercli
 
 import (
 	log "github.com/sirupsen/logrus"

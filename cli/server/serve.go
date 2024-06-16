@@ -1,4 +1,4 @@
-package cli
+package servercli
 
 import (
 	"github.com/spf13/cobra"
