@@ -5,7 +5,7 @@ on:
       - created
 
 env:
-  REGISTRY: gchr.io
+  REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
