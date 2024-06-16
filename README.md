@@ -40,7 +40,7 @@ I'm working on an ansible role to do this and will update the readme when comple
 
 ### Docker
 
-Images are published to the (GitHub Container Registry)[https://github.com/ST2Projects/ssh-sentinel-server/pkgs/container/ssh-sentinel-server]. You can pull the latest version of the image
+Images are published to the [GitHub Container Registry](https://github.com/ST2Projects/ssh-sentinel-server/pkgs/container/ssh-sentinel-server). You can pull the latest version of the image
 
 ```shell
 docker pull ghcr.io/st2projects/ssh-sentinel-server:latest
