@@ -6,5 +6,5 @@ LABEL org.opencontainers.image.source=https://github.com/st2projects/ssh-sentine
 COPY ssh-sentinel-server ./
 
 EXPOSE 8080
-RUN ["mkdir", "/config"]
+RUN ["mkdir", "/resources"]
 ENTRYPOINT ["./ssh-sentinel-server", "serve", "--config", "/resources/config.json"]
