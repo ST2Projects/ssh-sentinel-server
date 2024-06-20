@@ -13,7 +13,7 @@ var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the CA server",
 	Run: func(cmd *cobra.Command, args []string) {
-		InitialiseApp(configPath, devMode, httpConfig)
+		//InitialiseApp(configPath, devMode, httpConfig)
 	},
 }
 

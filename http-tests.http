@@ -1,12 +1,68 @@
+#
+#### testNormalRequest
+#POST http://localhost/ssh
+#Content-Type: application/json
+#
+#{"username": "test", "api_key": "63cac958-6a06-4f18-9a58-d26779f89ab1", "principals": ["test"], "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICazCPU7VgxhgZWNXr2bA2nErkFyXRz4IMddcZLDN7MU xxx@aaa"}
+#
+#> {%
+# // Response handler
+# client.test("Request was successful", function () {
+#     client.assert(response.status === 200, "Status was not 200");
+#     client.assert(response.body.signedKey !== "", "signed key was empty!");
+#     // let responseBody = JSON.parse(response.body.toString());
+#     // client.assert(responseBody.signedKey != null, "Signed key was empty / null");
+# });
+# %}
+#
+#### testFailedRequestUnAuthorisedAPIKey
+#POST http://localhost/ssh
+#Content-Type:  application/json
+#
+#{"username": "test", "api_key": "aabb", "principals": ["test"], "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICazCPU7VgxhgZWNXr2bA2nErkFyXRz4IMddcZLDN7MU xxx@aaa"}
+#
+#> {%
+# // Response handler
+# client.test("Request failed", function () {
+#     client.assert(response.status === 401, "Status was not 401");
+#     client.assert(response.body.signedKey === "", "signed key was not empty!");
+#     // let responseBody = JSON.parse(response.body.toString());
+#     // client.assert(responseBody.signedKey != null, "Signed key was empty / null");
+# });
+# %}
 
-### testNormalRequest
-POST http://localhost/ssh
+### testAuth
+POST http://localhost:8090/api/collections/users/auth-with-password
 Content-Type: application/json
 
-{"username": "test", "api_key": "63cac958-6a06-4f18-9a58-d26779f89ab1", "principals": ["test"], "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICazCPU7VgxhgZWNXr2bA2nErkFyXRz4IMddcZLDN7MU xxx@aaa"}
+{"identity": "testpb", "password": "Password1!" }
+
+> {%
+ client.global.set("auth_token", response.body.token)
+ %}
+
+### testPing
+GET http://localhost:8090/ping
+Content-Type: text/plain
+Authorization: {{auth_token}}
+
+> {%
+client.test("Request success", function(){
+  client.assert(response.status === 200, "Status was not 200")
+})
+%}
+
+### testSigning
+POST http://localhost:8090/sign
+Content-Type: text/plain
+Authorization: {{auth_token}}
+
+{"principals": ["test"], "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICazCPU7VgxhgZWNXr2bA2nErkFyXRz4IMddcZLDN7MU xxx@aaa"}
+
 
 > {%
  // Response handler
+ console.log(response.body.toString())
  client.test("Request was successful", function () {
      client.assert(response.status === 200, "Status was not 200");
      client.assert(response.body.signedKey !== "", "signed key was empty!");
@@ -15,18 +71,14 @@ Content-Type: application/json
  });
  %}
 
-### testFailedRequestUnAuthorisedAPIKey
-POST http://localhost/ssh
-Content-Type:  application/json
-
-{"username": "test", "api_key": "aabb", "principals": ["test"], "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICazCPU7VgxhgZWNXr2bA2nErkFyXRz4IMddcZLDN7MU xxx@aaa"}
+### testGetCAKey
+GET http://localhost:8090/capubkey
+Content-Type: text/plain
+Authorization: {{auth_token}}
 
 > {%
- // Response handler
- client.test("Request failed", function () {
-     client.assert(response.status === 401, "Status was not 401");
-     client.assert(response.body.signedKey === "", "signed key was not empty!");
-     // let responseBody = JSON.parse(response.body.toString());
-     // client.assert(responseBody.signedKey != null, "Signed key was empty / null");
- });
- %}
+  client.test("Request success", function(){
+    client.assert(response.status === 200, "Status was not 200")
+    client.assert(response.body !== "", "key was empty!");
+  })
+%}

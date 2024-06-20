@@ -169,7 +169,8 @@ fabric.properties
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,go,goland
 
-resources
 dist/
 prod-http-tests.http
 .githubtoken
+/pb_data/
+/resources/

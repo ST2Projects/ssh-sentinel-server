@@ -1,9 +1,9 @@
 package main
 
 import (
-	servercli "github.com/st2projects/ssh-sentinel-server/cli/server"
+	"github.com/st2projects/ssh-sentinel-server/server"
 )
 
 func main() {
-	servercli.Execute()
+	server.Start()
 }
