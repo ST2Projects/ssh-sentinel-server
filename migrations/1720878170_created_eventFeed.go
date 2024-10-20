@@ -12,39 +12,57 @@ import (
 func init() {
 	m.Register(func(db dbx.Builder) error {
 		jsonData := `{
-			"id": "k1ppz0e8q9of3wd",
-			"created": "2024-06-19 20:09:45.859Z",
-			"updated": "2024-06-19 20:09:45.859Z",
-			"name": "caKeys",
+			"id": "wia3swzvun16e9l",
+			"created": "2024-07-13 13:42:50.115Z",
+			"updated": "2024-07-13 13:42:50.115Z",
+			"name": "eventFeed",
 			"type": "base",
 			"system": false,
 			"schema": [
 				{
 					"system": false,
-					"id": "dxbbnyns",
-					"name": "pubKey",
-					"type": "text",
-					"required": true,
-					"presentable": true,
+					"id": "j7lu4q17",
+					"name": "event",
+					"type": "select",
+					"required": false,
+					"presentable": false,
 					"unique": false,
 					"options": {
-						"min": null,
-						"max": null,
-						"pattern": ""
+						"maxSelect": 1,
+						"values": [
+							"login",
+							"sign",
+							"fetch_ca"
+						]
 					}
 				},
 				{
 					"system": false,
-					"id": "uuejwsjv",
-					"name": "privKey",
-					"type": "text",
-					"required": true,
+					"id": "vzr5txjz",
+					"name": "user",
+					"type": "relation",
+					"required": false,
 					"presentable": false,
 					"unique": false,
 					"options": {
-						"min": null,
-						"max": null,
-						"pattern": ""
+						"collectionId": "_pb_users_auth_",
+						"cascadeDelete": false,
+						"minSelect": null,
+						"maxSelect": 1,
+						"displayFields": null
+					}
+				},
+				{
+					"system": false,
+					"id": "qzs8u6sc",
+					"name": "eventTime",
+					"type": "date",
+					"required": false,
+					"presentable": false,
+					"unique": false,
+					"options": {
+						"min": "",
+						"max": ""
 					}
 				}
 			],
@@ -64,9 +82,9 @@ func init() {
 
 		return daos.New(db).SaveCollection(collection)
 	}, func(db dbx.Builder) error {
-		dao := daos.New(db)
+		dao := daos.New(db);
 
-		collection, err := dao.FindCollectionByNameOrId("k1ppz0e8q9of3wd")
+		collection, err := dao.FindCollectionByNameOrId("wia3swzvun16e9l")
 		if err != nil {
 			return err
 		}

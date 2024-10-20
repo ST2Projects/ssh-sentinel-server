@@ -11,12 +11,15 @@ import (
 	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
+	"github.com/pocketbase/pocketbase/tools/list"
 	log "github.com/sirupsen/logrus"
 	"github.com/st2projects/ssh-sentinel-server/config"
 	_ "github.com/st2projects/ssh-sentinel-server/migrations"
+	"github.com/st2projects/ssh-sentinel-server/model/db"
 	"golang.org/x/crypto/ssh"
 	"os"
 	"strings"
+	"time"
 )
 
 const (
@@ -31,6 +34,7 @@ func Start() {
 
 	onAfterBootstrap(AppContext)
 	onBeforeServe(AppContext)
+	onTerminate(AppContext)
 
 	isGoRun := strings.HasPrefix(os.Args[0], os.TempDir())
 
@@ -43,6 +47,13 @@ func Start() {
 	if err := AppContext.Start(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func onTerminate(app *pocketbase.PocketBase) {
+	app.OnTerminate().Add(func(e *core.TerminateEvent) error {
+
+		return nil
+	})
 }
 
 func onAfterBootstrap(app *pocketbase.PocketBase) {
@@ -68,15 +79,51 @@ func onAfterBootstrap(app *pocketbase.PocketBase) {
 func onBeforeServe(app *pocketbase.PocketBase) {
 
 	commonHandlers := []echo.MiddlewareFunc{apis.ActivityLogger(app)}
+	recordAuthHandlers := append(commonHandlers, requireRecordAuth(app, "users"))
 
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		e.Router.GET("/ui", apis.StaticDirectoryHandler(os.DirFS(PublicDir), true))
-		e.Router.GET("/ping", PingHandler, append(commonHandlers)...) // TODO remove auth
-		e.Router.GET("/capubkey", CAPubKeyHandler, commonHandlers...)
-		e.Router.POST("/sign", KeySignHandler, append(commonHandlers, apis.RequireRecordAuth("users"))...)
+		e.Router.GET("/ping", PingHandler, commonHandlers...)
+		e.Router.GET("/capubkey", CAPubKeyHandler, append(recordAuthHandlers, eventFeedLogger(app, db.Fetch))...)
+		e.Router.POST("/sign", KeySignHandler, append(recordAuthHandlers, eventFeedLogger(app, db.Sign))...)
 
 		return nil
 	})
+}
+
+func eventFeedLogger(app *pocketbase.PocketBase, event db.Event) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			if err := next(c); err != nil {
+				return err
+			}
+
+			eventFeed, err := app.Dao().FindCollectionByNameOrId("eventFeed")
+			if err != nil {
+				return err
+			}
+			newEvent := models.NewRecord(eventFeed)
+			newEventForm := forms.NewRecordUpsert(app, newEvent)
+
+			userRecord, err := getAuthUserRecord(c)
+
+			err = newEventForm.LoadData(map[string]any{
+				"event":     event,
+				"user":      userRecord.Id,
+				"eventTime": time.Now().UTC(),
+			})
+
+			if err != nil {
+				return err
+			}
+
+			if err = newEventForm.Submit(); err != nil {
+				return nil
+			}
+
+			return nil
+		}
+	}
 }
 
 func createNewDefaultKey(app *pocketbase.PocketBase) error {
@@ -138,4 +185,43 @@ func makeKeyPair() (string, string) {
 	publicKeyString := string(ssh.MarshalAuthorizedKey(signer.PublicKey()))
 
 	return pemPrivateKeyString, publicKeyString
+}
+
+func requireRecordAuth(app *pocketbase.PocketBase, optCollectionNames ...string) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+
+			userRecord, err := getAuthUserRecord(c)
+			if err != nil {
+				return err
+			}
+
+			// check record collection name
+			if len(optCollectionNames) > 0 && !list.ExistInSlice(userRecord.Collection().Name, optCollectionNames) {
+				return apis.NewForbiddenError("The authorized record model is not allowed to perform this action.", nil)
+			}
+
+			approved := userRecord.GetBool("adminApproved")
+			verified := userRecord.Verified()
+
+			if !approved || !verified {
+				log.Infof("User [%s (%s) tried to access [%s] but verification status: verified[%v] approved[%v]",
+					userRecord.Username(), userRecord.Email(), c.Request().RequestURI, verified, approved)
+				return apis.NewForbiddenError("User is not verified or approved", nil)
+			}
+
+			eventFeedLogger(app, db.Login)
+
+			return next(c)
+		}
+	}
+}
+
+func getAuthUserRecord(context echo.Context) (*models.Record, *apis.ApiError) {
+	record, _ := context.Get(apis.ContextAuthRecordKey).(*models.Record)
+	if record == nil {
+		return nil, apis.NewUnauthorizedError("The request requires valid record authorization token to be set.", nil)
+	}
+
+	return record, nil
 }

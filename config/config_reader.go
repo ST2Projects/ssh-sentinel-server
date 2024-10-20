@@ -8,9 +8,6 @@ import (
 )
 
 type ConfigType struct {
-	DevMode           bool            `json:"devMode"`
-	CAPrivateKey      string          `json:"CAPrivateKey"`
-	CAPublicKey       string          `json:"CAPublicKey"`
 	MaxValidTime      string          `json:"maxValidTime"`
 	DefaultExtensions []api.Extension `json:"defaultExtensions"`
 }
